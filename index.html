@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>LernPilot – Dein intelligenter Lernplaner</title>
+<style>
+  :root{
+    --bg:#e9ebe5;
+    --surface:#ffffff;
+    --surface-2:#f5f6f2;
+    --text:#1b1b1f;
+    --muted:#6c727e;
+    --line:#e6e7e2;
+    --line-strong:#dcddd7;
+    --primary:#2563eb;
+    --primary-ink:#ffffff;
+    --primary-weak:#e9f0fe;
+    --purple:#6d28d9;
+    --green:#16a34a;
+    --green-weak:#e7f6ec;
+    --orange:#dd7a16;
+    --orange-weak:#fdf2e0;
+    --red:#ee4d4d;
+    --sidebar:#ffffff;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+    --shadow-lg:0 4px 16px rgba(16,24,40,.08);
+    --radius:14px;
+    --radius-sm:10px;
+    --sidebar-w:258px;
+  }
+  [data-theme="dark"]{
+    --bg:#0e0e11;
+    --surface:#1a1a1e;
+    --surface-2:#212128;
+    --text:#e7e7ea;
+    --muted:#9aa0ab;
+    --line:#2a2a31;
+    --line-strong:#34343c;
+    --primary:#3b82f6;
+    --primary-weak:#1b2c52;
+    --purple:#a78bfa;
+    --green:#22c55e;
+    --green-weak:#15291c;
+    --orange:#f59e0b;
+    --orange-weak:#2c2113;
+    --red:#ef5252;
+    --sidebar:#161619;
+    --shadow:none;
+    --shadow-lg:0 8px 28px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    transition:background .25s ease,color .25s ease;
+  }
+  button{font-family:inherit;cursor:pointer}
+  input,select{font-family:inherit}
+  ::selection{background:var(--primary);color:#fff}
+
+  /* ---------- Layout ---------- */
+  .app{display:flex;min-height:100vh}
+
+  .sidebar{
+    width:var(--sidebar-w);
+    flex:0 0 var(--sidebar-w);
+    background:var(--sidebar);
+    border-right:1px solid var(--line);
+    padding:22px 16px;
+    display:flex;flex-direction:column;
+    position:fixed;top:0;left:0;bottom:0;
+    z-index:40;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .brand .logo{width:34px;height:34px;flex:0 0 34px}
+  .brand h1{font-size:1.18rem;font-weight:800;letter-spacing:-.02em}
+  .brand p{font-size:.72rem;color:var(--muted);margin-top:1px}
+
+  .nav{display:flex;flex-direction:column;gap:3px}
+  .nav button{
+    display:flex;align-items:center;gap:12px;
+    width:100%;text-align:left;
+    padding:11px 13px;border:none;border-radius:var(--radius-sm);
+    background:transparent;color:var(--text);
+    font-size:.95rem;font-weight:500;
+    transition:background .12s,color .12s;
+  }
+  .nav button:hover{background:var(--surface-2)}
+  .nav button.active{background:var(--primary-weak);color:var(--primary);font-weight:600}
+  .nav button .ico{width:18px;height:18px;flex:0 0 18px;opacity:.85}
+  .nav button.active .ico{opacity:1}
+
+  /* user chip */
+  .sidebar-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--line)}
+  .ux-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;text-transform:uppercase}
+  .ux-meta{min-width:0;display:flex;flex-direction:column;line-height:1.2}
+  .ux-email{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ux-logout{align-self:flex-start;background:none;border:none;padding:0;color:var(--muted);font-size:.76rem;font-weight:600;text-decoration:underline}
+  .ux-logout:hover{color:var(--red)}
+
+  .sidebar-foot{padding-top:14px;border-top:1px solid var(--line);display:flex;gap:7px;flex-wrap:wrap}
+  .tool-btn{
+    flex:1;min-width:0;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:9px 8px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+    background:var(--surface);color:var(--text);font-size:.78rem;font-weight:500;
+    transition:background .12s,border-color .12s;
+  }
+  .tool-btn:hover{background:var(--surface-2);border-color:var(--primary)}
+  .tool-btn .ico{width:15px;height:15px}
+
+  .main{flex:1;margin-left:var(--sidebar-w);padding:32px 40px 64px;min-width:0}
+  .view-head{margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .view-head h2{font-size:2rem;font-weight:800;letter-spacing:-.025em}
+
+  /* mobile top bar */
+  .topbar{display:none}
+
+  /* ---------- Cards / generic ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .grid-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px}
+  .stat{padding:20px 22px;display:flex;flex-direction:column;gap:7px}
+  .stat .label{font-size:.7rem;font-weight:600;letter-spacing:.09em;color:var(--muted);text-transform:uppercase}
+  .stat .num{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.02em}
+  .stat .sub{font-size:.8rem;color:var(--muted)}
+  .num.blue{color:var(--primary)} .num.purple{color:var(--purple)}
+  .num.green{color:var(--green)} .num.orange{color:var(--orange)}
+
+  .section-label{font-size:.74rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:26px 2px 12px}
+  .section-label:first-child{margin-top:0}
+
+  .banner{
+    background:var(--red);color:#fff;border-radius:var(--radius);
+    padding:18px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    box-shadow:var(--shadow);margin-bottom:6px;
+  }
+  .banner .b-icon{font-size:1.4rem}
+  .banner strong{font-size:1.05rem}
+  .banner span{opacity:.92;font-style:italic;font-size:.95rem}
+
+  /* progress forecast */
+  .forecast{padding:18px 22px;display:flex;align-items:center;gap:20px;margin-bottom:14px}
+  .forecast .fc-main{flex:1;min-width:0}
+  .forecast h4{font-size:1.05rem;font-weight:700;margin-bottom:3px}
+  .forecast .fc-sub{font-size:.82rem;color:var(--muted)}
+  .forecast .fc-right{display:flex;align-items:center;gap:16px;flex:0 0 auto}
+  .bar{height:9px;width:230px;max-width:38vw;background:var(--surface-2);border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+  .pct{font-size:1.15rem;font-weight:800;min-width:46px;text-align:right}
+  .fc-tag{font-size:.85rem;color:var(--muted);min-width:148px}
+
+  /* next exams */
+  .exam-row{
+    display:flex;align-items:center;gap:16px;padding:16px 18px;margin-bottom:12px;
+  }
+  .countdown{
+    flex:0 0 auto;width:54px;height:54px;border-radius:12px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-weight:800;font-size:1.25rem;line-height:1;
+  }
+  .countdown small{font-size:.6rem;font-weight:600;letter-spacing:.05em;opacity:.85;margin-top:2px}
+  .cd-blue{background:var(--primary-weak);color:var(--primary)}
+  .cd-amber{background:var(--orange-weak);color:var(--orange)}
+  .cd-green{background:var(--green-weak);color:var(--green)}
+  .exam-row .ex-body{flex:1;min-width:0}
+  .exam-row .ex-body h4{font-size:1.05rem;font-weight:700}
+  .exam-row .ex-body p{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .exam-row .ex-actions{flex:0 0 auto}
+
+  .pill-btn{padding:7px 13px;border:1px solid var(--line-strong);border-radius:99px;background:transparent;color:var(--muted);font-size:.8rem;font-weight:600}
+  .pill-btn:hover{color:var(--red);border-color:var(--red)}
+  .pill-btn.neutral:hover{color:var(--primary);border-color:var(--primary)}
+
+  /* form */
+  .form-card{padding:24px 26px;margin-bottom:8px}
+  .form-card h3{font-size:1.2rem;font-weight:700;margin-bottom:18px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1 / -1}
+  .field label{font-size:.82rem;color:var(--muted);font-weight:500}
+  .field input[type=text],.field input[type=date],.field input[type=number],.field select{
+    padding:11px 13px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+    background:var(--surface-2);color:var(--text);font-size:.95rem;width:100%;
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+  .range-row{display:flex;align-items:center;gap:14px}
+  .range-row input[type=range]{flex:1;accent-color:var(--primary);height:6px}
+  .range-val{font-weight:800;font-size:1.1rem;min-width:20px;text-align:center}
+  .form-actions{display:flex;gap:12px;margin-top:6px}
+  .btn-primary{background:var(--primary);color:var(--primary-ink);border:none;padding:12px 26px;border-radius:var(--radius-sm);font-weight:700;font-size:.95rem}
+  .btn-primary:hover{filter:brightness(1.07)}
+  .btn-primary:disabled{opacity:.6;cursor:default;filter:none}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line-strong);padding:12px 24px;border-radius:var(--radius-sm);font-weight:600;font-size:.95rem}
+  .btn-ghost:hover{background:var(--surface-2)}
+  .form-hint{margin-top:14px;font-size:.82rem;color:var(--muted);background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 14px;display:none}
+  .form-hint.show{display:block}
+
+  /* lernplan */
+  .day-group{margin-bottom:8px}
+  .day-head{font-size:.78rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:22px 2px 11px}
+  .block{
+    display:flex;align-items:center;gap:15px;padding:15px 18px;margin-bottom:11px;
+  }
+  .check{
+    width:26px;height:26px;flex:0 0 26px;border-radius:8px;border:2px solid var(--line-strong);
+    background:var(--surface);display:flex;align-items:center;justify-content:center;transition:.12s;
+  }
+  .check:hover{border-color:var(--primary)}
+  .check.done{background:var(--primary);border-color:var(--primary)}
+  .check.done svg{display:block}
+  .check svg{display:none;width:15px;height:15px;color:#fff}
+  .block .bl-body{flex:1;min-width:0}
+  .block .bl-body h4{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .block.done .bl-body h4{text-decoration:line-through;color:var(--muted)}
+  .block .bl-body p{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .tag-sr{font-size:.66rem;font-weight:700;letter-spacing:.04em;color:var(--purple);background:color-mix(in srgb,var(--purple) 14%,transparent);padding:2px 7px;border-radius:6px;text-transform:none}
+  .status{flex:0 0 auto;font-size:.8rem;font-weight:600;padding:6px 13px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+  .status.done{background:var(--green-weak);color:var(--green)}
+  .info-note{margin-top:18px;font-size:.85rem;color:var(--purple);background:color-mix(in srgb,var(--purple) 9%,transparent);border:1px solid color-mix(in srgb,var(--purple) 22%,transparent);border-radius:var(--radius-sm);padding:13px 16px;display:flex;gap:9px;align-items:flex-start}
+
+  /* noten */
+  .noten-wrap{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+  .grade-row{display:flex;align-items:center;gap:16px;padding:16px 18px;margin-bottom:13px}
+  .grade-badge{
+    flex:0 0 auto;width:56px;height:56px;border-radius:12px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;line-height:1;
+    background:var(--surface-2);color:var(--text);
+  }
+  .grade-badge small{font-size:.58rem;font-weight:600;opacity:.7;margin-top:2px}
+  .gb-green{background:var(--green-weak);color:var(--green)}
+  .gb-amber{background:var(--orange-weak);color:var(--orange)}
+  .grade-row .gr-body{flex:1;min-width:0}
+  .grade-row .gr-body h4{font-size:1.05rem;font-weight:700}
+  .grade-row .gr-body p{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .badge{font-size:.78rem;font-weight:600;padding:7px 14px;border-radius:99px;white-space:nowrap}
+  .badge.good{background:var(--green-weak);color:var(--green)}
+  .badge.warn{background:var(--orange-weak);color:var(--orange)}
+  .grade-enter{display:flex;gap:8px;align-items:center}
+  .grade-enter input{width:74px;padding:9px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:.9rem;text-align:center}
+  .grade-enter button{padding:9px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;font-size:.85rem}
+
+  .overview-card{padding:22px}
+  .overview-card h3{font-size:.74rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:18px}
+  .ov-item{margin-bottom:16px}
+  .ov-item .ov-top{display:flex;justify-content:space-between;font-size:.92rem;font-weight:600;margin-bottom:6px}
+  .ov-bar{height:9px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+  .ov-bar > i{display:block;height:100%;border-radius:99px}
+  .avg-box{margin-top:6px;padding:16px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--line)}
+  .avg-box .lbl{font-size:.85rem;color:var(--muted)}
+  .avg-box .val{font-size:2rem;font-weight:800;color:var(--green);line-height:1.1}
+
+  /* statistiken */
+  .badge-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+  .achv{padding:13px 20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:.92rem;font-weight:600;display:flex;align-items:center;gap:8px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+  .chart-card{padding:22px 24px}
+  .chart-card h3{font-size:.74rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:22px}
+  .chart{display:flex;align-items:flex-end;gap:10px;height:170px}
+  .chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+  .chart .col .bar-v{width:100%;max-width:34px;border-radius:7px 7px 0 0;transition:height .5s ease;min-height:4px}
+  .bar-blue{background:var(--primary)} .bar-green{background:var(--green)}
+  .chart .col .lab{font-size:.72rem;color:var(--muted);font-weight:500}
+
+  .table-card{padding:22px 24px;overflow-x:auto}
+  .table-card h3{font-size:.74rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;min-width:560px}
+  th{text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:13px 12px;font-size:.9rem;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+  tr:nth-child(even) td{background:var(--surface-2)}
+  td .fach{font-weight:700}
+  .grade-num.good{color:var(--green);font-weight:700}
+  .grade-num.warn{color:var(--orange);font-weight:700}
+  .mini-bar{display:flex;align-items:center;gap:10px}
+  .mini-bar .t{height:8px;width:130px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+  .mini-bar .t > i{display:block;height:100%;background:var(--primary);border-radius:99px}
+
+  .empty{padding:40px 24px;text-align:center;color:var(--muted)}
+  .empty h4{font-size:1.05rem;color:var(--text);margin-bottom:6px;font-weight:700}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;
+    font-size:.9rem;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;
+    transition:.3s ease;z-index:99;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .scrim{display:none}
+
+  /* ---------- Auth / Setup Screens ---------- */
+  .center-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .auth-card{width:100%;max-width:410px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);padding:34px 32px}
+  .auth-brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;margin-bottom:24px}
+  .auth-brand .logo{width:52px;height:52px}
+  .auth-brand h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .auth-brand p{font-size:.88rem;color:var(--muted)}
+  .auth-tabs{display:flex;background:var(--surface-2);border-radius:var(--radius-sm);padding:4px;margin-bottom:22px}
+  .auth-tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:.9rem;padding:9px;border-radius:8px}
+  .auth-tabs button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+  .auth-field{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
+  .auth-field label{font-size:.82rem;color:var(--muted);font-weight:600}
+  .auth-field input{padding:12px 14px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:.95rem}
+  .auth-field input:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+  .auth-btn{width:100%;background:var(--primary);color:#fff;border:none;padding:13px;border-radius:var(--radius-sm);font-weight:700;font-size:.97rem;margin-top:4px}
+  .auth-btn:hover{filter:brightness(1.07)}
+  .auth-btn:disabled{opacity:.6;cursor:default;filter:none}
+  .auth-error{display:none;background:color-mix(in srgb,var(--red) 12%,transparent);border:1px solid color-mix(in srgb,var(--red) 35%,transparent);color:var(--red);font-size:.85rem;font-weight:600;padding:10px 13px;border-radius:var(--radius-sm);margin-bottom:15px}
+  .auth-links{display:flex;justify-content:center;gap:6px;margin-top:18px;font-size:.86rem;color:var(--muted);flex-wrap:wrap}
+  .auth-links button{background:none;border:none;color:var(--primary);font-weight:600;font-size:.86rem;text-decoration:underline}
+  .auth-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:16px;line-height:1.5}
+  .setup-card{max-width:560px}
+  .setup-card h1{font-size:1.4rem;font-weight:800;margin-bottom:8px}
+  .setup-card p{font-size:.92rem;color:var(--muted);margin-bottom:14px;line-height:1.6}
+  .setup-card ol{margin:0 0 16px 20px;font-size:.92rem;line-height:1.8}
+  .setup-card code{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .setup-card .small{font-size:.82rem}
+  .spinner{width:34px;height:34px;border:3px solid var(--line-strong);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-txt{color:var(--muted);text-align:center;font-size:.92rem}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:980px){
+    .grid-stats{grid-template-columns:repeat(2,1fr)}
+    .charts{grid-template-columns:1fr}
+    .noten-wrap{grid-template-columns:1fr}
+  }
+  @media (max-width:760px){
+    .sidebar{transform:translateX(-100%);transition:transform .28s ease;box-shadow:var(--shadow-lg);width:280px;flex-basis:280px}
+    body.menu-open .sidebar{transform:translateX(0)}
+    body.menu-open .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:35}
+    .main{margin-left:0;padding:18px 18px 56px}
+    .topbar{
+      display:flex;align-items:center;gap:12px;
+      position:sticky;top:0;z-index:30;
+      background:var(--surface);border-bottom:1px solid var(--line);
+      padding:13px 16px;margin:-18px -18px 18px;
+    }
+    .topbar .menu-btn{width:40px;height:40px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center}
+    .topbar .tb-brand{font-weight:800;font-size:1.05rem;letter-spacing:-.02em}
+    .topbar .tb-actions{margin-left:auto;display:flex;gap:7px}
+    .topbar .tb-actions button{width:38px;height:38px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .view-head h2{font-size:1.55rem}
+    .form-grid{grid-template-columns:1fr}
+    .forecast{flex-direction:column;align-items:stretch;gap:12px}
+    .forecast .fc-right{justify-content:space-between}
+    .bar{max-width:none;width:auto;flex:1}
+    .fc-tag{min-width:0;text-align:right}
+  }
+  @media (max-width:420px){
+    .grid-stats{grid-template-columns:1fr 1fr;gap:12px}
+    .stat{padding:15px 16px}
+    .stat .num{font-size:2rem}
+    .auth-card{padding:26px 20px}
+  }
+
+  /* ---------- Print (PDF Export) ---------- */
+  @media print{
+    .sidebar,.topbar,.scrim,.toast,.ex-actions,.pill-btn,.form-card,.grade-enter,.tool-btn{display:none !important}
+    .main{margin:0;padding:0}
+    body{background:#fff;color:#000}
+    .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+    .view-head h2{font-size:1.6rem}
+    @page{margin:1.4cm}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =========================================================
+   1) KONFIGURATION  —  HIER DEINE SUPABASE-DATEN EINTRAGEN
+   Projekt-Einstellungen → API:
+     • Project URL  → SUPABASE_URL
+     • anon public  → SUPABASE_ANON_KEY  (darf öffentlich sein, durch RLS geschützt)
+   Danach einmalig schema.sql im Supabase SQL-Editor ausführen.
+   ========================================================= */
+const SUPABASE_URL      = "https://vtrdtimbwkupebodpfva.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cmR0aW1id2t1cGVib2RwZnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODcyMjEsImV4cCI6MjA5NzM2MzIyMX0.TJRbxUY1q00H-uwN0K4vrowpYUsARCEva0cA2XJ9Lsc";
+
+/* =========================================================
+   LernPilot – Logik
+   Schweizer Notensystem: 6 = beste Note, 4 = bestanden.
+   ========================================================= */
+const MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const WOCHENTAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const WT_KURZ = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+const LERNTYPEN = ["Lese/Schreib","Visuell","Auditiv","Kinästhetisch"];
+
+const NAV = [
+  ["uebersicht","Übersicht","M3 12h4v8H3v-8zm7-9h4v17h-4V3zm7 5h4v12h-4V8z"],
+  ["pruefungen","Prüfungen","M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"],
+  ["lernplan","Lernplan","M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"],
+  ["noten","Noten","M3 3v18h18M7 14l4-4 3 3 5-6"],
+  ["statistiken","Statistiken","M18 20V10M12 20V4M6 20v-6"]
+];
+
+const LOGO = '<svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+  '<circle cx="20" cy="20" r="18" fill="#1e2451"/>'+
+  '<circle cx="20" cy="20" r="18" stroke="#f5b21a" stroke-width="2.5"/>'+
+  '<path d="M27 13L17 17.5L13 27L23 22.5L27 13Z" fill="#f5b21a"/>'+
+  '<circle cx="20" cy="20" r="1.8" fill="#1e2451"/></svg>';
+
+const METHODEN = {
+  "Lese/Schreib": ["Zusammenfassung schreiben","Stichworte notieren","Karteikarten beschriften","Probefragen schriftlich lösen","Merksätze formulieren"],
+  "Visuell": ["Mindmap zeichnen","Farbige Zusammenfassung","Diagramme & Skizzen erstellen","Lernposter gestalten","Ablauf visualisieren"],
+  "Auditiv": ["Stoff laut erklären","Audio-Zusammenfassung aufnehmen","Mit jemandem besprechen","Erklärvideo anschauen","Inhalte vorlesen"],
+  "Kinästhetisch": ["Übungsaufgaben lösen","Praxisbeispiele durchgehen","Lernkarten laufend wiederholen","Modell / Experiment bauen","Anwendung üben"]
+};
+
+/* ---------- Datums-Helper (lokal, ohne Zeitzonen-Bugs) ---------- */
+function toISO(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+  return y+"-"+m+"-"+day;
+}
+function parseISO(s){ const p=String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2], 12,0,0); }
+function today(){ const d=new Date(); d.setHours(12,0,0,0); return d; }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function daysUntil(iso){ return Math.round((parseISO(iso)-today())/86400000); }
+function fmtShort(iso){ const d=parseISO(iso); return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getFullYear()).slice(2); }
+function fmtLong(iso){ const d=parseISO(iso); return WOCHENTAGE[d.getDay()]+", "+String(d.getDate()).padStart(2,"0")+". "+MONATE[d.getMonth()]; }
+function wtIndexMo(d){ return (d.getDay()+6)%7; }
+function isoWeek(d){
+  const t=new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day=(t.getDay()+6)%7; t.setDate(t.getDate()-day+3);
+  const first=new Date(t.getFullYear(),0,4);
+  const wk=1+Math.round(((t-first)/86400000 - 3 + ((first.getDay()+6)%7))/7);
+  return wk;
+}
+
+let _idc = 1;
+function uid(){ return "id"+(Date.now().toString(36))+(_idc++); }
+function byId(id){ return document.getElementById(id); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function round05(n){ return Math.round(n*2)/2; }
+function fmtH(n){ return (Number.isInteger(n)? n : n.toFixed(1).replace(/\.0$/,"")) + "h"; }
+
+/* ---------- "KI": Aufwand schätzen + Lernplan generieren ---------- */
+// Regelbasierter Schätzer – im Prototyp ersetzbar durch echten LLM-Call.
+function schaetzeStunden(schwierigkeit, wunschnote){
+  const basis = schwierigkeit * 2.5;
+  const ehrgeiz = 1 + (wunschnote - 4) * 0.18;
+  let h = basis * Math.max(0.7, ehrgeiz);
+  return Math.min(40, Math.max(2, round05(h)));
+}
+function generiereBloecke(exam, start){
+  start = start || today();
+  const examDate = parseISO(exam.datum);
+  const fenster = Math.round((examDate - start)/86400000) - 1;
+  const stunden = exam.geplanteStunden;
+  const methoden = METHODEN[exam.lerntyp] || METHODEN["Lese/Schreib"];
+  const bloecke = [];
+  const haeppchen = [];
+  let rest = stunden;
+  while(rest > 0){ const d = rest >= 1.5 ? 1.5 : Math.max(0.5, round05(rest)); haeppchen.push(d); rest = round05(rest - d); }
+  const n = haeppchen.length;
+  const tageVerfuegbar = Math.max(1, fenster);
+  let ersterTag = null;
+  haeppchen.forEach((dauer, i) => {
+    let offset = Math.floor((i+1) * tageVerfuegbar / (n+1));
+    offset = Math.min(tageVerfuegbar - 1, Math.max(0, offset));
+    const datum = toISO(addDays(start, offset));
+    if(ersterTag === null) ersterTag = addDays(start, offset);
+    bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum,
+      aufgabe: methoden[i % methoden.length], dauer, lerntyp: exam.lerntyp, erledigt: false, sr: false });
+  });
+  if(ersterTag){
+    [3,7,14].forEach(off => {
+      const d = addDays(ersterTag, off);
+      if(d < examDate && d > ersterTag){
+        bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum: toISO(d),
+          aufgabe: "Wiederholung (Spaced Repetition)", dauer: 0.5, lerntyp: exam.lerntyp, erledigt: false, sr: true });
+      }
+    });
+  }
+  return bloecke;
+}
+
+/* ---------- Demodaten (nur auf Knopfdruck) ---------- */
+function seed(){
+  const st = { exams: [], blocks: [], settings: { darkMode:false } };
+  function mkExam(fach, offset, wunschnote, schwierigkeit, lerntyp, note){
+    const ex = { id: uid(), fach, datum: toISO(addDays(today(), offset)),
+      wunschnote, schwierigkeit, lerntyp,
+      geplanteStunden: schaetzeStunden(schwierigkeit, wunschnote),
+      erreichteNote: (note===undefined ? null : note) };
+    st.exams.push(ex);
+    return ex;
+  }
+  function plan(ex, startOffset){
+    const bl = generiereBloecke(ex, addDays(today(), startOffset));
+    bl.forEach(b => { if(daysUntil(b.datum) < 0) b.erledigt = true; });
+    st.blocks.push(...bl);
+  }
+  const m = mkExam("Mathematik", 12, 5, 4, "Lese/Schreib");
+  const g = mkExam("Geschichte",  5, 4, 3, "Visuell");
+  plan(m, -10);
+  plan(g, -8);
+  const e   = mkExam("Englisch",   -8, 5, 2, "Auditiv", 5.5);
+  const inf = mkExam("Informatik", -15, 5, 4, "Lese/Schreib", 4.5);
+  const p   = mkExam("Physik",      -4, 4, 3, "Visuell");
+  plan(e,  -22);
+  plan(inf,-30);
+  plan(p,  -18);
+  const doneDays = new Set(st.blocks.filter(b=>b.erledigt).map(b=>b.datum));
+  for(let i=1;i<=5;i++){
+    const iso = toISO(addDays(today(), -i));
+    if(!doneDays.has(iso)){
+      st.blocks.push({ id:uid(), examId:p.id, fach:p.fach, datum:iso,
+        aufgabe:"Kurze Wiederholung", dauer:0.5, lerntyp:p.lerntyp, erledigt:true, sr:false });
+      doneDays.add(iso);
+    }
+  }
+  return st;
+}
+
+/* ---------- Berechnungen ---------- */
+function kommendePruefungen(){
+  return state.exams
+    .filter(e => e.erreichteNote === null && daysUntil(e.datum) >= 0)
+    .sort((a,b)=> parseISO(a.datum)-parseISO(b.datum));
+}
+function bloeckeVonExam(id){ return state.blocks.filter(b=>b.examId===id); }
+function summe(arr, f){ return arr.reduce((s,x)=>s+f(x),0); }
+function dashStats(){
+  const komm = kommendePruefungen();
+  const geplant = summe(state.blocks, b=>b.dauer);
+  const erledigt = summe(state.blocks.filter(b=>b.erledigt), b=>b.dauer);
+  const heuteIso = toISO(today());
+  const heuteOffen = state.blocks.filter(b=>b.datum===heuteIso && !b.erledigt).length;
+  return { pruefungen: komm.length, geplant, erledigt, heuteOffen,
+           prozent: geplant? Math.round(erledigt/geplant*100):0, streak: streak() };
+}
+function streak(){
+  const done = new Set(state.blocks.filter(b=>b.erledigt).map(b=>b.datum));
+  let d = today(); let s = 0;
+  if(!done.has(toISO(d))) d = addDays(d,-1);
+  while(done.has(toISO(d))){ s++; d = addDays(d,-1); }
+  return s;
+}
+function prognose(exam){
+  const bl = bloeckeVonExam(exam.id);
+  const geplant = summe(bl,b=>b.dauer);
+  const erledigt = summe(bl.filter(b=>b.erledigt),b=>b.dauer);
+  const pct = geplant? erledigt/geplant : 0;
+  const sorted = bl.map(b=>parseISO(b.datum)).sort((a,b)=>a-b);
+  let erwartet = 0;
+  if(sorted.length){
+    const start = sorted[0], ende = parseISO(exam.datum);
+    const fenster = Math.max(1,(ende-start));
+    erwartet = Math.min(1, Math.max(0,(today()-start)/fenster));
+  }
+  const aufKurs = pct + 0.06 >= erwartet;
+  return { pct: Math.round(pct*100), aufKurs };
+}
+function notenStatus(erreicht, wunsch){
+  if(erreicht === null) return { label:"Note eintragen", cls:"neutral" };
+  if(erreicht > wunsch)  return { label:"Über Ziel", cls:"good" };
+  if(erreicht === wunsch) return { label:"Ziel erreicht", cls:"good" };
+  return { label:"Ziel verfehlt", cls:"warn" };
+}
+function durchschnitt(){
+  const noten = state.exams.filter(e=>e.erreichteNote!==null).map(e=>e.erreichteNote);
+  return noten.length? (summe(noten,n=>n)/noten.length).toFixed(1) : "–";
+}
+function fachListe(){
+  const map = {};
+  state.exams.forEach(e=>{ if(!map[e.fach]) map[e.fach]={fach:e.fach,pruefungen:0,noten:[]}; map[e.fach].pruefungen++; if(e.erreichteNote!==null) map[e.fach].noten.push(e.erreichteNote); });
+  Object.values(map).forEach(f=>{
+    const bl = state.blocks.filter(b=>b.fach===f.fach);
+    f.geplant = summe(bl,b=>b.dauer);
+    f.erledigt = summe(bl.filter(b=>b.erledigt),b=>b.dauer);
+    f.fortschritt = f.geplant? Math.round(f.erledigt/f.geplant*100):0;
+    f.avg = f.noten.length? (summe(f.noten,n=>n)/f.noten.length).toFixed(1):"–";
+  });
+  return Object.values(map);
+}
+
+/* =========================================================
+   2) STATE + SUPABASE
+   ========================================================= */
+let supabase = null;
+let session = null, userId = null, userEmail = null;
+let authMode = "login";          // login | signup | forgot
+let authState = "loading";       // loading | setup | auth | recovery | dberror | ready
+let dbErrorMsg = "";
+let busy = false;
+
+let state = { exams: [], blocks: [], settings: { darkMode:false } };
+let view = "uebersicht";
+
+function configured(){
+  return SUPABASE_URL && SUPABASE_ANON_KEY &&
+         !SUPABASE_URL.includes("DEIN-PROJEKT") && !SUPABASE_ANON_KEY.includes("DEIN-ANON");
+}
+
+/* DB-Zeile -> App-Objekt (snake_case -> camelCase, Zahlen casten) */
+function examFromRow(r){
+  return { id:r.id, fach:r.fach, datum:r.datum, wunschnote:Number(r.wunschnote),
+    schwierigkeit:Number(r.schwierigkeit), lerntyp:r.lerntyp,
+    geplanteStunden:Number(r.geplante_stunden),
+    erreichteNote:(r.erreichte_note==null ? null : Number(r.erreichte_note)) };
+}
+function blockFromRow(r){
+  return { id:r.id, examId:r.exam_id, fach:r.fach, datum:r.datum, aufgabe:r.aufgabe,
+    dauer:Number(r.dauer), lerntyp:r.lerntyp, erledigt:!!r.erledigt, sr:!!r.sr };
+}
+
+async function loadAll(){
+  const [ex, bl, pr] = await Promise.all([
+    supabase.from("exams").select("*"),
+    supabase.from("blocks").select("*"),
+    supabase.from("profiles").select("dark_mode").eq("id", userId).maybeSingle()
+  ]);
+  if(ex.error) throw ex.error;
+  if(bl.error) throw bl.error;
+  state.exams  = (ex.data||[]).map(examFromRow);
+  state.blocks = (bl.data||[]).map(blockFromRow);
+  state.settings = { darkMode: !!(pr.data && pr.data.dark_mode) };
+}
+
+async function addExamRemote(data){
+  const geplant = schaetzeStunden(data.schwierigkeit, data.wunschnote);
+  const { data:exRow, error } = await supabase.from("exams").insert({
+    user_id:userId, fach:data.fach, datum:data.datum, wunschnote:data.wunschnote,
+    schwierigkeit:data.schwierigkeit, lerntyp:data.lerntyp, geplante_stunden:geplant, erreichte_note:null
+  }).select().single();
+  if(error) throw error;
+  const exam = examFromRow(exRow);
+  state.exams.push(exam);
+  const bl = generiereBloecke(exam);
+  if(bl.length){
+    const rows = bl.map(b=>({ user_id:userId, exam_id:exam.id, fach:b.fach, datum:b.datum,
+      aufgabe:b.aufgabe, dauer:b.dauer, lerntyp:b.lerntyp, erledigt:b.erledigt, sr:b.sr }));
+    const { data:blRows, error:be } = await supabase.from("blocks").insert(rows).select();
+    if(be) throw be;
+    state.blocks.push(...(blRows||[]).map(blockFromRow));
+  }
+  return exam;
+}
+
+async function deleteExamRemote(id){
+  const { error } = await supabase.from("exams").delete().eq("id", id);
+  if(error) throw error;
+  state.exams  = state.exams.filter(e=>e.id!==id);
+  state.blocks = state.blocks.filter(b=>b.examId!==id);
+}
+
+async function toggleBlockRemote(id){
+  const b = state.blocks.find(x=>x.id===id); if(!b) return;
+  const next = !b.erledigt;
+  b.erledigt = next; render();
+  const { error } = await supabase.from("blocks").update({ erledigt: next }).eq("id", id);
+  if(error){ b.erledigt = !next; render(); toast("Konnte nicht speichern"); }
+}
+
+async function setGradeRemote(id, note){
+  const { error } = await supabase.from("exams").update({ erreichte_note: note }).eq("id", id);
+  if(error){ toast("Konnte nicht speichern"); return; }
+  const ex = state.exams.find(x=>x.id===id); if(ex) ex.erreichteNote = note;
+  render(); toast("Note gespeichert");
+}
+
+async function setDarkModeRemote(v){
+  state.settings.darkMode = v; render();
+  const { error } = await supabase.from("profiles").upsert({ id:userId, dark_mode:v });
+  if(error){ /* lokal trotzdem gesetzt – best effort */ }
+}
+
+async function clearAllRemote(reRender){
+  let r = await supabase.from("blocks").delete().eq("user_id", userId);
+  if(r.error) throw r.error;
+  r = await supabase.from("exams").delete().eq("user_id", userId);
+  if(r.error) throw r.error;
+  state.exams = []; state.blocks = [];
+  if(reRender){ view="uebersicht"; render(); }
+}
+
+async function loadDemoRemote(){
+  await clearAllRemote(false);
+  const local = seed();
+  const examRows = local.exams.map(e=>({ user_id:userId, fach:e.fach, datum:e.datum, wunschnote:e.wunschnote,
+    schwierigkeit:e.schwierigkeit, lerntyp:e.lerntyp, geplante_stunden:e.geplanteStunden, erreichte_note:e.erreichteNote }));
+  const { data:insEx, error } = await supabase.from("exams").insert(examRows).select();
+  if(error) throw error;
+  const idMap = {};
+  local.exams.forEach((e,i)=>{ if(insEx[i]) idMap[e.id] = insEx[i].id; });
+  const blockRows = local.blocks.map(b=>({ user_id:userId, exam_id:(idMap[b.examId]||null), fach:b.fach, datum:b.datum,
+    aufgabe:b.aufgabe, dauer:b.dauer, lerntyp:b.lerntyp, erledigt:b.erledigt, sr:b.sr }));
+  const { data:insBl, error:be } = await supabase.from("blocks").insert(blockRows).select();
+  if(be) throw be;
+  state.exams  = (insEx||[]).map(examFromRow);
+  state.blocks = (insBl||[]).map(blockFromRow);
+}
+
+/* ---------- Auth ---------- */
+function authRedirect(){ return window.location.origin + window.location.pathname; }
+async function doLogin(email, pw){ const { error } = await supabase.auth.signInWithPassword({ email, password:pw }); if(error) throw error; }
+async function doSignup(email, pw){
+  const { data, error } = await supabase.auth.signUp({ email, password:pw, options:{ emailRedirectTo: authRedirect() } });
+  if(error) throw error; return data;
+}
+async function doForgot(email){ const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: authRedirect() }); if(error) throw error; }
+async function doRecoverySave(pw){ const { error } = await supabase.auth.updateUser({ password:pw }); if(error) throw error; }
+async function doLogout(){ await supabase.auth.signOut(); }
+function authErr(err){
+  const m=(err&&err.message)||"";
+  if(/Invalid login/i.test(m)) return "E-Mail oder Passwort ist falsch.";
+  if(/already registered|already exists|User already/i.test(m)) return "Diese E-Mail ist bereits registriert.";
+  if(/Email not confirmed|confirm/i.test(m)) return "Bitte zuerst die Bestätigungs-E-Mail anklicken.";
+  if(/rate limit|too many/i.test(m)) return "Zu viele Versuche – bitte kurz warten.";
+  if(/Password should be/i.test(m)) return "Passwort muss mindestens 6 Zeichen haben.";
+  return m || "Etwas ist schiefgelaufen.";
+}
+
+/* =========================================================
+   3) VIEWS
+   ========================================================= */
+function renderNav(){
+  const nav = byId("nav"); if(!nav) return;
+  nav.innerHTML = NAV.map(([key,label,path]) =>
+    '<button data-action="nav" data-view="'+key+'" class="'+(view===key?"active":"")+'">'+
+    '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+path+'"/></svg>'+label+'</button>'
+  ).join("");
+}
+
+function viewUebersicht(){
+  const s = dashStats();
+  const komm = kommendePruefungen();
+  let html = '<div class="view-head"><h2>Übersicht</h2></div>';
+  html += '<div class="grid-stats">'+
+    statCard("Prüfungen", s.pruefungen, "blue", "kommend") +
+    statCard("Lernstunden", fmtH(s.geplant), "purple", "total geplant") +
+    statCard("Erledigt", fmtH(s.erledigt), "green", s.prozent+"% absolviert") +
+    statCard("Heute", s.heuteOffen, "orange", "Blöcke offen") +
+  '</div>';
+  if(s.streak > 0){
+    html += '<div class="banner"><span class="b-icon">🔥</span><strong>'+s.streak+' Tage Lernstreak!</strong>'+
+            '<span>Weiter so — dein Rhythmus zahlt sich aus.</span></div>';
+  }
+  if(komm.length){
+    html += '<div class="section-label">Fortschrittsprognose</div>';
+    komm.forEach(e=>{
+      const p = prognose(e);
+      const farbe = p.aufKurs ? "var(--green)" : "var(--orange)";
+      const tag = p.aufKurs ? "Du bist auf Kurs!" : "Mehr Aufwand empfohlen";
+      html += '<div class="card forecast">'+
+        '<div class="fc-main"><h4>'+escapeHtml(e.fach)+'</h4>'+
+        '<div class="fc-sub">Bei aktuellem Tempo · '+p.pct+'% des Lernziels erreicht</div></div>'+
+        '<div class="fc-right">'+
+          '<div class="bar"><i style="width:'+p.pct+'%;background:'+farbe+'"></i></div>'+
+          '<div class="pct" style="color:'+farbe+'">'+p.pct+'%</div>'+
+          '<div class="fc-tag">'+tag+'</div>'+
+        '</div></div>';
+    });
+  }
+  if(komm.length){
+    html += '<div class="section-label">Nächste Prüfungen</div>';
+    komm.slice(0,4).forEach(e=> html += examRow(e));
+  } else {
+    html += '<div class="card empty"><h4>Keine kommenden Prüfungen</h4><p>Erfasse unter «Prüfungen» deine nächste Prüfung — der Lernplan wird automatisch erstellt.</p></div>';
+  }
+  return html;
+}
+function statCard(label, num, color, sub){
+  return '<div class="card stat"><div class="label">'+label+'</div>'+
+    '<div class="num '+color+'">'+num+'</div><div class="sub">'+sub+'</div></div>';
+}
+function examRow(e){
+  const d = daysUntil(e.datum);
+  const cls = d<=3 ? "cd-amber" : "cd-blue";
+  const bl = bloeckeVonExam(e.id);
+  const h = summe(bl,b=>b.dauer);
+  return '<div class="card exam-row">'+
+    '<div class="countdown '+cls+'">'+d+'<small>Tage</small></div>'+
+    '<div class="ex-body"><h4>'+escapeHtml(e.fach)+'</h4>'+
+    '<p>'+fmtShort(e.datum)+' · Ziel: Note '+e.wunschnote+' · '+fmtH(h)+' · '+e.lerntyp+'</p></div>'+
+    '</div>';
+}
+
+function viewPruefungen(){
+  let html = '<div class="view-head"><h2>Prüfungen</h2></div>';
+  const heutePlus = toISO(addDays(today(),10));
+  html += '<div class="card form-card"><h3>Neue Prüfung erfassen</h3>'+
+    '<div class="form-grid">'+
+      field("Fach","<input type=\"text\" id=\"f-fach\" placeholder=\"z. B. Mathematik\">") +
+      field("Datum","<input type=\"date\" id=\"f-datum\" value=\""+heutePlus+"\">") +
+      field("Wunschnote", selectNote("f-note","5")) +
+      field("Lerntyp", selectLerntyp("f-lerntyp")) +
+      '<div class="field full"><label>Schwierigkeit (1 leicht – 6 sehr schwer)</label>'+
+        '<div class="range-row"><input type="range" id="f-schwer" min="1" max="6" step="1" value="4">'+
+        '<span class="range-val" id="f-schwer-val">4</span></div></div>'+
+    '</div>'+
+    '<div class="form-actions">'+
+      '<button class="btn-primary" data-action="add-exam">Hinzufügen</button>'+
+      '<button class="btn-ghost" data-action="reset-form">Felder leeren</button>'+
+    '</div>'+
+    '<div class="form-hint" id="f-hint"></div>'+
+  '</div>';
+  html += '<div class="section-label">Erfasste Prüfungen</div>';
+  const sorted = state.exams.slice().sort((a,b)=> parseISO(a.datum)-parseISO(b.datum));
+  if(!sorted.length){
+    html += '<div class="card empty"><h4>Noch keine Prüfungen</h4><p>Erfasse oben deine erste Prüfung – oder lade unten Demodaten zum Ausprobieren.</p></div>';
+  } else {
+    sorted.forEach(e=>{
+      const erledigt = e.erreichteNote!==null;
+      const d = daysUntil(e.datum);
+      let cd, body;
+      if(erledigt){
+        cd = '<div class="countdown cd-green">✓</div>';
+        body = '<p>'+fmtShort(e.datum)+' · Ziel: Note '+e.wunschnote+' · Erhalten: '+e.erreichteNote+'</p>';
+      } else {
+        cd = '<div class="countdown '+(d<=3?"cd-amber":"cd-blue")+'">'+d+'<small>Tage</small></div>';
+        const h = summe(bloeckeVonExam(e.id),b=>b.dauer);
+        body = '<p>'+fmtShort(e.datum)+' · Ziel: Note '+e.wunschnote+' · '+fmtH(h)+' · '+e.lerntyp+'</p>';
+      }
+      html += '<div class="card exam-row">'+cd+
+        '<div class="ex-body"><h4>'+escapeHtml(e.fach)+'</h4>'+body+'</div>'+
+        '<div class="ex-actions"><button class="pill-btn" data-action="delete-exam" data-id="'+e.id+'">Löschen</button></div>'+
+      '</div>';
+    });
+  }
+  html += '<div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">'+
+    '<button class="pill-btn neutral" data-action="load-demo">↺ Demodaten laden</button>'+
+    '<button class="pill-btn" data-action="clear-all">Alle meine Daten löschen</button>'+
+  '</div>';
+  return html;
+}
+function field(label, inner){ return '<div class="field"><label>'+label+'</label>'+inner+'</div>'; }
+function selectNote(id, val){
+  let opts="";
+  for(let n=6;n>=3;n-=0.5){ const v=String(n); opts+='<option value="'+v+'"'+(v===val?" selected":"")+'>'+v+'</option>'; }
+  return '<select id="'+id+'">'+opts+'</select>';
+}
+function selectLerntyp(id){
+  return '<select id="'+id+'">'+LERNTYPEN.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select>';
+}
+
+function viewLernplan(){
+  let html = '<div class="view-head"><h2>Lernplan</h2></div>';
+  const future = state.blocks.filter(b=> daysUntil(b.datum) >= 0).sort((a,b)=> parseISO(a.datum)-parseISO(b.datum) || (a.sr-b.sr));
+  if(!future.length){
+    html += '<div class="card empty"><h4>Dein Lernplan ist leer</h4><p>Erfasse eine Prüfung — die Lernblöcke erscheinen hier automatisch, inkl. Wiederholungen.</p></div>';
+    return html;
+  }
+  const groups = {};
+  future.forEach(b=>{ (groups[b.datum]=groups[b.datum]||[]).push(b); });
+  Object.keys(groups).sort((a,b)=>parseISO(a)-parseISO(b)).forEach(iso=>{
+    html += '<div class="day-group"><div class="day-head">'+fmtLong(iso)+'</div>';
+    groups[iso].forEach(b=> html += blockRow(b));
+    html += '</div>';
+  });
+  html += '<div class="info-note">💡 <div><strong>Spaced Repetition:</strong> Automatische Wiederholungen nach 3, 7 und 14 Tagen — du behältst den Stoff so deutlich länger.</div></div>';
+  return html;
+}
+function blockRow(b){
+  const srTag = b.sr ? '<span class="tag-sr">SR Wdh.</span>' : "";
+  return '<div class="card block'+(b.erledigt?" done":"")+'">'+
+    '<button class="check'+(b.erledigt?" done":"")+'" data-action="toggle-block" data-id="'+b.id+'" aria-label="Erledigt umschalten">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'+
+    '</button>'+
+    '<div class="bl-body"><h4>'+escapeHtml(b.fach)+' '+srTag+'</h4><p>'+escapeHtml(b.aufgabe)+' · '+fmtH(b.dauer)+'</p></div>'+
+    '<div class="status'+(b.erledigt?" done":"")+'">'+(b.erledigt?"✓ Erledigt":"Offen")+'</div>'+
+  '</div>';
+}
+
+function viewNoten(){
+  let html = '<div class="view-head"><h2>Noten &amp; Fortschritt</h2></div>';
+  const graded = state.exams.filter(e=>e.erreichteNote!==null || daysUntil(e.datum) < 0)
+    .sort((a,b)=> parseISO(b.datum)-parseISO(a.datum));
+  html += '<div class="noten-wrap"><div>';
+  if(!graded.length){
+    html += '<div class="card empty"><h4>Noch keine Noten</h4><p>Sobald eine Prüfung vorbei ist, trägst du hier die Note ein.</p></div>';
+  } else {
+    graded.forEach(e=>{
+      const st = notenStatus(e.erreichteNote, e.wunschnote);
+      if(e.erreichteNote===null){
+        html += '<div class="card grade-row">'+
+          '<div class="grade-badge">–</div>'+
+          '<div class="gr-body"><h4>'+escapeHtml(e.fach)+'</h4><p>'+fmtShort(e.datum)+' · Ziel: '+e.wunschnote+' · Erhalten: –</p></div>'+
+          '<div class="grade-enter"><input type="number" min="1" max="6" step="0.5" placeholder="Note" data-grade-input="'+e.id+'">'+
+          '<button data-action="save-grade" data-id="'+e.id+'">Speichern</button></div>'+
+        '</div>';
+      } else {
+        const gb = st.cls==="good" ? "gb-green" : "gb-amber";
+        html += '<div class="card grade-row">'+
+          '<div class="grade-badge '+gb+'">'+e.erreichteNote+'<small>Note</small></div>'+
+          '<div class="gr-body"><h4>'+escapeHtml(e.fach)+'</h4><p>'+fmtShort(e.datum)+' · Ziel: '+e.wunschnote+' · Erhalten: '+e.erreichteNote+'</p></div>'+
+          '<div class="badge '+st.cls+'">'+st.label+'</div>'+
+        '</div>';
+      }
+    });
+  }
+  html += '</div>';
+  const mitNote = state.exams.filter(e=>e.erreichteNote!==null);
+  html += '<div class="card overview-card"><h3>Notenübersicht</h3>';
+  if(!mitNote.length){
+    html += '<p style="color:var(--muted);font-size:.9rem">Noch keine Noten erfasst.</p>';
+  } else {
+    mitNote.forEach(e=>{
+      const pct = (e.erreichteNote/6)*100;
+      const col = e.erreichteNote>=e.wunschnote ? "var(--green)" : "var(--orange)";
+      html += '<div class="ov-item"><div class="ov-top"><span>'+escapeHtml(e.fach)+'</span><span>'+e.erreichteNote+'</span></div>'+
+        '<div class="ov-bar"><i style="width:'+pct+'%;background:'+col+'"></i></div></div>';
+    });
+    html += '<div class="avg-box"><div class="lbl">Ø Durchschnitt</div><div class="val">'+durchschnitt()+'</div></div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function viewStatistiken(){
+  let html = '<div class="view-head"><h2>Statistiken &amp; Analyse</h2></div>';
+  const s = dashStats();
+  const ach = [];
+  if(s.streak>0) ach.push("🔥 "+s.streak+" Tage Streak");
+  ach.push("⏱ "+fmtH(s.erledigt)+" Lernzeit");
+  if(state.exams.some(e=>e.erreichteNote!==null && e.erreichteNote>=4)) ach.push("✅ Prüfung bestanden");
+  if(kommendePruefungen().some(e=>prognose(e).aufKurs)) ach.push("🎯 Auf Kurs");
+  html += '<div class="badge-row">'+ach.map(a=>'<div class="achv">'+a+'</div>').join("")+'</div>';
+  const proTag = [0,0,0,0,0,0,0];
+  state.blocks.filter(b=>b.erledigt).forEach(b=>{ proTag[wtIndexMo(parseISO(b.datum))] += b.dauer; });
+  const maxTag = Math.max(1, ...proTag);
+  const wochen = {};
+  state.blocks.filter(b=>b.erledigt).forEach(b=>{ const w="KW"+isoWeek(parseISO(b.datum)); wochen[w]=(wochen[w]||0)+b.dauer; });
+  const wkKeys = Object.keys(wochen).sort((a,b)=> (+a.slice(2)) - (+b.slice(2))).slice(-7);
+  const maxWk = Math.max(1, ...wkKeys.map(k=>wochen[k]));
+  html += '<div class="charts">';
+  html += '<div class="card chart-card"><h3>Stunden pro Wochentag</h3><div class="chart">'+
+    proTag.map((v,i)=>'<div class="col"><div class="bar-v bar-blue" style="height:'+(v/maxTag*100)+'%"></div><div class="lab">'+WT_KURZ[i]+'</div></div>').join("")+
+  '</div></div>';
+  html += '<div class="card chart-card"><h3>Stunden pro Woche</h3><div class="chart">'+
+    (wkKeys.length? wkKeys.map(k=>'<div class="col"><div class="bar-v bar-green" style="height:'+(wochen[k]/maxWk*100)+'%"></div><div class="lab">'+k+'</div></div>').join("")
+      : '<div style="color:var(--muted);font-size:.9rem;align-self:center">Noch keine Daten</div>')+
+  '</div></div>';
+  html += '</div>';
+  const faecher = fachListe();
+  html += '<div class="card table-card"><h3>Fachanalyse</h3>';
+  if(!faecher.length){
+    html += '<p style="color:var(--muted);font-size:.9rem">Noch keine Fächer erfasst.</p>';
+  } else {
+    html += '<table><thead><tr><th>Fach</th><th>Lernstunden</th><th>Ø Note</th><th>Prüfungen</th><th>Fortschritt</th></tr></thead><tbody>';
+    faecher.forEach(f=>{
+      const noteCls = f.avg==="–" ? "" : (parseFloat(f.avg)>=4 ? "good":"warn");
+      html += '<tr>'+
+        '<td><span class="fach">'+escapeHtml(f.fach)+'</span></td>'+
+        '<td>'+fmtH(f.erledigt)+' / '+fmtH(f.geplant)+'</td>'+
+        '<td><span class="grade-num '+noteCls+'">'+f.avg+'</span></td>'+
+        '<td>'+f.pruefungen+'</td>'+
+        '<td><div class="mini-bar"><div class="t"><i style="width:'+f.fortschritt+'%"></i></div><span>'+f.fortschritt+'%</span></div></td>'+
+      '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  return html;
+}
+
+const VIEWS = { uebersicht:viewUebersicht, pruefungen:viewPruefungen, lernplan:viewLernplan, noten:viewNoten, statistiken:viewStatistiken };
+
+/* =========================================================
+   4) SCREENS (Auth / Setup / App-Shell)
+   ========================================================= */
+function appShell(){
+  const initial = (userEmail||"?").trim().charAt(0) || "?";
+  return ''+
+  '<div class="app">'+
+    '<aside class="sidebar">'+
+      '<div class="brand">'+LOGO+'<div><h1>LernPilot</h1><p>Dein Lernplaner</p></div></div>'+
+      '<nav class="nav" id="nav"></nav>'+
+      '<div class="sidebar-user">'+
+        '<div class="ux-avatar">'+escapeHtml(initial)+'</div>'+
+        '<div class="ux-meta"><span class="ux-email">'+escapeHtml(userEmail||"")+'</span>'+
+          '<button class="ux-logout" data-action="logout">Abmelden</button></div>'+
+      '</div>'+
+      '<div class="sidebar-foot">'+
+        '<button class="tool-btn" data-action="toggle-theme" title="Dark Mode umschalten"><span class="ico" id="theme-ico"></span><span id="theme-txt">Dunkel</span></button>'+
+        '<button class="tool-btn" data-action="export-ical" title="In Kalender exportieren">📅 iCal</button>'+
+        '<button class="tool-btn" data-action="export-pdf" title="Als PDF exportieren">📄 PDF</button>'+
+      '</div>'+
+    '</aside>'+
+    '<div class="scrim" data-action="close-menu"></div>'+
+    '<main class="main">'+
+      '<div class="topbar">'+
+        '<button class="menu-btn" data-action="open-menu" aria-label="Menü öffnen">'+
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'+
+        '</button>'+
+        '<span class="tb-brand">LernPilot</span>'+
+        '<div class="tb-actions">'+
+          '<button data-action="toggle-theme" aria-label="Dark Mode">🌙</button>'+
+          '<button data-action="export-ical" aria-label="iCal Export">📅</button>'+
+          '<button data-action="export-pdf" aria-label="PDF Export">📄</button>'+
+        '</div>'+
+      '</div>'+
+      '<div id="content"></div>'+
+    '</main>'+
+  '</div>';
+}
+
+function authScreen(){
+  const tab = (m,l)=> '<button class="'+(authMode===m?"active":"")+'" data-action="auth-mode" data-mode="'+m+'">'+l+'</button>';
+  let inner = '';
+  if(authMode==="forgot"){
+    inner =
+      '<div class="auth-error" id="auth-error"></div>'+
+      '<form id="auth-form">'+
+        '<div class="auth-field"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" placeholder="du@beispiel.ch"></div>'+
+        '<button class="auth-btn" id="auth-submit" type="submit">Link zum Zurücksetzen senden</button>'+
+      '</form>'+
+      '<div class="auth-links"><button data-action="auth-mode" data-mode="login">Zurück zum Login</button></div>';
+  } else {
+    const isSignup = authMode==="signup";
+    inner =
+      '<div class="auth-tabs">'+tab("login","Anmelden")+tab("signup","Registrieren")+'</div>'+
+      '<div class="auth-error" id="auth-error"></div>'+
+      '<form id="auth-form">'+
+        '<div class="auth-field"><label for="auth-email">E-Mail</label><input id="auth-email" type="email" autocomplete="email" placeholder="du@beispiel.ch"></div>'+
+        '<div class="auth-field"><label for="auth-pw">Passwort</label><input id="auth-pw" type="password" autocomplete="'+(isSignup?"new-password":"current-password")+'" placeholder="'+(isSignup?"mind. 6 Zeichen":"Passwort")+'"></div>'+
+        '<button class="auth-btn" id="auth-submit" type="submit">'+(isSignup?"Konto erstellen":"Anmelden")+'</button>'+
+      '</form>'+
+      (isSignup? '' : '<div class="auth-links"><button data-action="auth-mode" data-mode="forgot">Passwort vergessen?</button></div>')+
+      '<div class="auth-note">Deine Lerndaten werden sicher in der Cloud gespeichert und sind auf allen deinen Geräten verfügbar.</div>';
+  }
+  return '<div class="center-wrap"><div class="auth-card">'+
+    '<div class="auth-brand">'+LOGO+'<h1>LernPilot</h1><p>Dein intelligenter Lernplaner</p></div>'+
+    inner+'</div></div>';
+}
+
+function recoveryScreen(){
+  return '<div class="center-wrap"><div class="auth-card">'+
+    '<div class="auth-brand">'+LOGO+'<h1>Neues Passwort</h1><p>Wähle ein neues Passwort für dein Konto.</p></div>'+
+    '<div class="auth-error" id="auth-error"></div>'+
+    '<form id="recovery-form">'+
+      '<div class="auth-field"><label for="rec-pw">Neues Passwort</label><input id="rec-pw" type="password" autocomplete="new-password" placeholder="mind. 6 Zeichen"></div>'+
+      '<div class="auth-field"><label for="rec-pw2">Wiederholen</label><input id="rec-pw2" type="password" autocomplete="new-password" placeholder="nochmals eingeben"></div>'+
+      '<button class="auth-btn" id="auth-submit" type="submit">Passwort speichern</button>'+
+    '</form></div></div>';
+}
+
+function loadingScreen(){
+  return '<div class="center-wrap"><div style="text-align:center"><div class="spinner"></div><div class="loading-txt">LernPilot wird geladen…</div></div></div>';
+}
+
+function setupScreen(){
+  return '<div class="center-wrap"><div class="auth-card setup-card">'+
+    '<div class="auth-brand">'+LOGO+'<h1>Einrichtung nötig</h1></div>'+
+    '<p>Damit Login und Cloud-Speicher funktionieren, fehlen noch die Supabase-Zugangsdaten.</p>'+
+    '<ol>'+
+      '<li>Auf <code>supabase.com</code> ein kostenloses Projekt erstellen.</li>'+
+      '<li>Unter <strong>Project Settings → API</strong> die <code>Project URL</code> und den <code>anon public</code> Key in dieser Datei bei <code>SUPABASE_URL</code> und <code>SUPABASE_ANON_KEY</code> eintragen.</li>'+
+      '<li>Im <strong>SQL Editor</strong> die Datei <code>schema.sql</code> einmal ausführen (legt Tabellen + Sicherheitsregeln an).</li>'+
+      '<li>Seite neu laden.</li>'+
+    '</ol>'+
+    '<p class="small">Der anon-Key darf öffentlich im Frontend stehen — der Zugriff ist über Row Level Security pro Benutzer abgesichert.</p>'+
+  '</div></div>';
+}
+
+function dbErrorScreen(){
+  return '<div class="center-wrap"><div class="auth-card setup-card">'+
+    '<div class="auth-brand">'+LOGO+'<h1>Datenbank nicht bereit</h1></div>'+
+    '<p>Die Verbindung steht, aber die Tabellen fehlen oder sind nicht erreichbar. Hast du <code>schema.sql</code> im Supabase SQL-Editor ausgeführt?</p>'+
+    '<p class="small" style="color:var(--red)">'+escapeHtml(dbErrorMsg)+'</p>'+
+    '<button class="auth-btn" data-action="reload">Erneut versuchen</button>'+
+  '</div></div>';
+}
+
+/* =========================================================
+   5) RENDER + TOAST + EXPORT
+   ========================================================= */
+function render(){
+  document.documentElement.dataset.theme = state.settings.darkMode ? "dark" : "light";
+  const ti = byId("theme-ico"); if(ti) ti.textContent = state.settings.darkMode ? "☀️" : "🌙";
+  const tt = byId("theme-txt"); if(tt) tt.textContent = state.settings.darkMode ? "Hell" : "Dunkel";
+  renderNav();
+  const c = byId("content"); if(c) c.innerHTML = VIEWS[view]();
+  window.scrollTo(0,0);
+}
+
+function renderRoot(){
+  const root = byId("root");
+  if(authState==="loading"){ root.innerHTML = loadingScreen(); return; }
+  if(authState==="setup"){ root.innerHTML = setupScreen(); return; }
+  if(authState==="dberror"){ root.innerHTML = dbErrorScreen(); return; }
+  if(authState==="recovery"){ root.innerHTML = recoveryScreen(); return; }
+  if(authState==="auth" || !session){ root.innerHTML = authScreen(); return; }
+  root.innerHTML = appShell();
+  render();
+}
+
+function toast(msg){
+  const t = byId("toast"); if(!t) return;
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+
+function exportICal(){
+  const pad = n=>String(n).padStart(2,"0");
+  const now = new Date();
+  const stamp = now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+"Z";
+  const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//LernPilot//Lernplaner//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  function ev(uidStr, dateIso, summary, desc){
+    const d = dateIso.replace(/-/g,"");
+    const end = toISO(addDays(parseISO(dateIso),1)).replace(/-/g,"");
+    lines.push("BEGIN:VEVENT","UID:"+uidStr+"@lernpilot","DTSTAMP:"+stamp,
+      "DTSTART;VALUE=DATE:"+d,"DTEND;VALUE=DATE:"+end,
+      "SUMMARY:"+summary.replace(/,/g,"\\,"),"DESCRIPTION:"+desc.replace(/,/g,"\\,"),"END:VEVENT");
+  }
+  state.blocks.filter(b=>!b.erledigt).forEach(b=> ev(b.id, b.datum, "📘 "+b.fach+" – "+b.aufgabe, "LernPilot Lernblock · "+fmtH(b.dauer)+" · "+b.lerntyp));
+  state.exams.filter(e=>e.erreichteNote===null && daysUntil(e.datum)>=0).forEach(e=> ev("exam-"+e.id, e.datum, "📝 Prüfung: "+e.fach, "Ziel: Note "+e.wunschnote));
+  lines.push("END:VCALENDAR");
+  const blob = new Blob([lines.join("\r\n")], {type:"text/calendar"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="lernpilot.ics"; a.click();
+  URL.revokeObjectURL(url);
+  toast("Kalender exportiert (lernpilot.ics)");
+}
+
+/* =========================================================
+   6) EVENTS
+   ========================================================= */
+document.addEventListener("click", async (e)=>{
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+  const a = el.dataset.action;
+
+  // --- Auth / Setup ---
+  if(a==="auth-mode"){ authMode = el.dataset.mode; renderRoot(); return; }
+  if(a==="reload"){ window.location.reload(); return; }
+  if(a==="logout"){ try{ await doLogout(); }catch(_){ } return; }
+
+  // --- App ---
+  if(a==="nav"){ view = el.dataset.view; document.body.classList.remove("menu-open"); render(); return; }
+  if(a==="open-menu"){ document.body.classList.add("menu-open"); return; }
+  if(a==="close-menu"){ document.body.classList.remove("menu-open"); return; }
+  if(a==="toggle-theme"){ setDarkModeRemote(!state.settings.darkMode); return; }
+  if(a==="export-ical"){ exportICal(); return; }
+  if(a==="export-pdf"){ toast("Druckdialog – als PDF speichern"); setTimeout(()=>window.print(),250); return; }
+
+  if(a==="toggle-block"){ toggleBlockRemote(el.dataset.id); return; }
+
+  if(a==="delete-exam"){
+    if(!window.confirm("Diese Prüfung samt Lernblöcken wirklich löschen?")) return;
+    try{ await deleteExamRemote(el.dataset.id); render(); toast("Prüfung gelöscht"); }
+    catch(err){ toast("Löschen fehlgeschlagen"); }
+    return;
+  }
+  if(a==="add-exam"){ await addExamFromForm(); return; }
+  if(a==="reset-form"){
+    const x=byId("f-fach"); if(x) x.value="";
+    const sl=byId("f-schwer"); if(sl){ sl.value=4; const v=byId("f-schwer-val"); if(v) v.textContent="4"; }
+    return;
+  }
+  if(a==="save-grade"){
+    const inp = document.querySelector('[data-grade-input="'+el.dataset.id+'"]');
+    const val = parseFloat(inp && inp.value);
+    if(!(val>=1 && val<=6)){ toast("Bitte Note zwischen 1 und 6 eingeben"); return; }
+    await setGradeRemote(el.dataset.id, Math.round(val*2)/2);
+    return;
+  }
+  if(a==="load-demo"){
+    if(!window.confirm("Demodaten laden? Deine aktuellen Prüfungen und Lernblöcke werden dabei ersetzt.")) return;
+    try{ await loadDemoRemote(); view="uebersicht"; render(); toast("Demodaten geladen"); }
+    catch(err){ toast("Konnte Demodaten nicht laden"); }
+    return;
+  }
+  if(a==="clear-all"){
+    if(!window.confirm("Wirklich ALLE deine Prüfungen und Lernblöcke löschen? Das kann nicht rückgängig gemacht werden.")) return;
+    try{ await clearAllRemote(true); toast("Alle Daten gelöscht"); }
+    catch(err){ toast("Löschen fehlgeschlagen"); }
+    return;
+  }
+});
+
+document.addEventListener("input", (e)=>{
+  if(e.target.id==="f-schwer"){ const v=byId("f-schwer-val"); if(v) v.textContent = e.target.value; }
+});
+
+document.addEventListener("submit", (e)=>{
+  if(e.target.id==="auth-form"){ e.preventDefault(); submitAuth(); }
+  else if(e.target.id==="recovery-form"){ e.preventDefault(); submitRecovery(); }
+});
+
+async function addExamFromForm(){
+  const fach = (byId("f-fach").value||"").trim();
+  const datum = byId("f-datum").value;
+  const note = parseFloat(byId("f-note").value);
+  const lerntyp = byId("f-lerntyp").value;
+  const schwer = parseInt(byId("f-schwer").value,10);
+  const hint = byId("f-hint");
+  const showHint = m=>{ if(hint){ hint.textContent=m; hint.classList.add("show"); } };
+  if(!fach || !datum){ showHint("Bitte Fach und Datum ausfüllen."); return; }
+  if(daysUntil(datum) < 0){ showHint("Das Datum liegt in der Vergangenheit – wähle ein zukünftiges Prüfungsdatum."); return; }
+  if(hint) hint.classList.remove("show");
+  if(busy) return; busy = true;
+  const btn = document.querySelector('[data-action="add-exam"]');
+  if(btn){ btn.disabled = true; btn.textContent = "Speichern…"; }
+  try{
+    const exam = await addExamRemote({ fach, datum, wunschnote:note, schwierigkeit:schwer, lerntyp });
+    view = "lernplan"; render();
+    toast(escapeHtml(fach)+": "+fmtH(exam.geplanteStunden)+" eingeplant");
+  }catch(err){
+    showHint("Speichern fehlgeschlagen – bitte erneut versuchen.");
+  }finally{
+    busy = false;
+    const b2 = document.querySelector('[data-action="add-exam"]');
+    if(b2){ b2.disabled = false; b2.textContent = "Hinzufügen"; }
+  }
+}
+
+async function submitAuth(){
+  if(busy) return;
+  const email=(byId("auth-email")?.value||"").trim();
+  const pw=(byId("auth-pw")?.value||"");
+  const errEl=byId("auth-error");
+  const setErr=m=>{ if(errEl){ errEl.textContent=m; errEl.style.display=m?"block":"none"; } };
+  setErr("");
+  if(!email){ setErr("Bitte E-Mail eingeben."); return; }
+  if(authMode!=="forgot" && pw.length<6){ setErr("Passwort muss mindestens 6 Zeichen haben."); return; }
+  busy=true;
+  const btn=byId("auth-submit"); const old=btn?btn.textContent:""; if(btn){ btn.textContent="Bitte warten…"; btn.disabled=true; }
+  try{
+    if(authMode==="login"){
+      await doLogin(email, pw);            // onAuth(SIGNED_IN) lädt die App
+    } else if(authMode==="signup"){
+      const d = await doSignup(email, pw);
+      if(!d.session){                       // E-Mail-Bestätigung aktiv
+        authMode="login"; renderRoot();
+        toast("Bestätigungs-E-Mail gesendet – bitte Postfach prüfen.");
+      }
+    } else if(authMode==="forgot"){
+      await doForgot(email);
+      authMode="login"; renderRoot();
+      toast("E-Mail zum Zurücksetzen gesendet.");
+    }
+  }catch(err){ setErr(authErr(err)); }
+  finally{ busy=false; const b=byId("auth-submit"); if(b){ b.textContent=old; b.disabled=false; } }
+}
+
+async function submitRecovery(){
+  if(busy) return;
+  const pw=(byId("rec-pw")?.value||""), pw2=(byId("rec-pw2")?.value||"");
+  const errEl=byId("auth-error");
+  const setErr=m=>{ if(errEl){ errEl.textContent=m; errEl.style.display=m?"block":"none"; } };
+  setErr("");
+  if(pw.length<6){ setErr("Passwort muss mindestens 6 Zeichen haben."); return; }
+  if(pw!==pw2){ setErr("Die Passwörter stimmen nicht überein."); return; }
+  busy=true; const btn=byId("auth-submit"); if(btn){ btn.textContent="Bitte warten…"; btn.disabled=true; }
+  try{
+    await doRecoverySave(pw);   // onAuth(USER_UPDATED) lädt danach die App
+    toast("Passwort aktualisiert");
+  }catch(err){ setErr(authErr(err)); if(btn){ btn.textContent="Passwort speichern"; btn.disabled=false; } }
+  finally{ busy=false; }
+}
+
+/* =========================================================
+   7) AUTH-LIFECYCLE + BOOT
+   ========================================================= */
+async function onAuth(event, sess){
+  if(event==="PASSWORD_RECOVERY"){
+    session=sess; userId=sess&&sess.user?sess.user.id:null; userEmail=sess&&sess.user?sess.user.email:null;
+    authState="recovery"; renderRoot(); return;
+  }
+  if(event==="SIGNED_OUT"){
+    session=null; userId=null; userEmail=null;
+    state={ exams:[], blocks:[], settings:{ darkMode:false } };
+    authMode="login"; authState="auth"; renderRoot(); return;
+  }
+  // Während der Passwort-Neuvergabe auf dem Formular bleiben (ausser nach USER_UPDATED)
+  if(authState==="recovery" && event!=="USER_UPDATED") return;
+
+  session = sess;
+  if(sess && sess.user){
+    userId = sess.user.id; userEmail = sess.user.email;
+    if(authState!=="ready"){
+      authState="loading"; renderRoot();
+      try{ await loadAll(); authState="ready"; renderRoot(); }
+      catch(err){ console.error(err); dbErrorMsg = (err&&err.message)||String(err); authState="dberror"; renderRoot(); }
+    }
+  } else {
+    authState="auth"; renderRoot();
+  }
+}
+
+async function boot(){
+  // Theme der Auth-Screens nach Systemeinstellung
+  try{ document.documentElement.dataset.theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"; }catch(_){}
+  if(!configured()){ authState="setup"; renderRoot(); return; }
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  authState="loading"; renderRoot();
+  supabase.auth.onAuthStateChange((event, sess)=> onAuth(event, sess));
+}
+
+boot();
+</script>
+</body>
+</html>
