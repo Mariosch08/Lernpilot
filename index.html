@@ -686,6 +686,8 @@ let state = { exams: [], blocks: [], flashcards: [], settings: { darkMode:false 
 let view = "uebersicht";
 let calMonth = null;        // erster Tag des angezeigten Monats (Date)
 let review = null;          // { examId, cards:[...], idx, flipped }
+let editingExamId = null;   // Prüfung, die gerade im Formular bearbeitet wird
+let cardManageId = null;    // Prüfung, deren Karten gerade verwaltet werden (manuell)
 
 function configured(){
   return SUPABASE_URL && SUPABASE_ANON_KEY &&
@@ -738,6 +740,36 @@ async function addExamRemote(data){
   const exam = examFromRow(exRow);
   state.exams.push(exam);
   return exam;
+}
+
+// Bestehende Prüfung bearbeiten (Felder ändern, Blöcke bleiben unverändert)
+async function updateExamRemote(id, data){
+  const { error } = await supabase.from("exams").update({
+    fach:data.fach, datum:data.datum, wunschnote:data.wunschnote,
+    schwierigkeit:data.schwierigkeit, lerntyp:data.lerntyp,
+    lernziele:(data.lernziele||null), stunden_pro_tag:(data.stundenProTag||1.5)
+  }).eq("id", id);
+  if(error) throw error;
+  const ex = state.exams.find(x=>x.id===id);
+  if(ex) Object.assign(ex, { fach:data.fach, datum:data.datum, wunschnote:data.wunschnote,
+    schwierigkeit:data.schwierigkeit, lerntyp:data.lerntyp, lernziele:data.lernziele,
+    stundenProTag:(data.stundenProTag||1.5) });
+}
+
+// Karte manuell hinzufügen
+async function addCardRemote(exam, frage, antwort, thema){
+  const { data:row, error } = await supabase.from("flashcards").insert({
+    user_id:userId, exam_id:exam.id, fach:exam.fach, frage, antwort,
+    thema:(thema||null), box:0, faellig:toISO(today())
+  }).select().single();
+  if(error) throw error;
+  state.flashcards.push(cardFromRow(row));
+}
+
+async function deleteCardRemote(id){
+  const { error } = await supabase.from("flashcards").delete().eq("id", id);
+  if(error) throw error;
+  state.flashcards = state.flashcards.filter(c=>c.id!==id);
 }
 
 // Blöcke einer Prüfung löschen (DB + State)
@@ -962,25 +994,31 @@ function examRow(e){
 function viewPruefungen(){
   let html = '<div class="view-head"><h2>Prüfungen</h2></div>';
   const heutePlus = toISO(addDays(today(),10));
-  html += '<div class="card form-card"><h3>Neue Prüfung erfassen</h3>'+
+  const ed = editingExamId ? state.exams.find(x=>x.id===editingExamId) : null;
+  html += '<div class="card form-card"><h3>'+(ed?"Prüfung bearbeiten":"Neue Prüfung erfassen")+'</h3>'+
     '<div class="form-grid">'+
-      field("Fach","<input type=\"text\" id=\"f-fach\" placeholder=\"z. B. Mathematik\">") +
-      field("Datum","<input type=\"date\" id=\"f-datum\" value=\""+heutePlus+"\">") +
-      field("Wunschnote", selectNote("f-note","5")) +
-      field("Lerntyp", selectLerntyp("f-lerntyp")) +
+      field("Fach","<input type=\"text\" id=\"f-fach\" placeholder=\"z. B. Mathematik\" value=\""+(ed?escapeHtml(ed.fach):"")+"\">") +
+      field("Datum","<input type=\"date\" id=\"f-datum\" value=\""+(ed?ed.datum:heutePlus)+"\">") +
+      field("Wunschnote", selectNote("f-note", ed?String(ed.wunschnote):"5")) +
+      field("Lerntyp", selectLerntyp("f-lerntyp", ed?ed.lerntyp:undefined)) +
       '<div class="field full"><label>Schwierigkeit (1 leicht – 6 sehr schwer)</label>'+
-        '<div class="range-row"><input type="range" id="f-schwer" min="1" max="6" step="1" value="4">'+
-        '<span class="range-val" id="f-schwer-val">4</span></div></div>'+
-      field("Lernzeit pro Tag (Std.)","<input type=\"number\" id=\"f-perday\" min=\"0.5\" max=\"8\" step=\"0.5\" value=\"1.5\">") +
+        '<div class="range-row"><input type="range" id="f-schwer" min="1" max="6" step="1" value="'+(ed?ed.schwierigkeit:4)+'">'+
+        '<span class="range-val" id="f-schwer-val">'+(ed?ed.schwierigkeit:4)+'</span></div></div>'+
+      field("Lernzeit pro Tag (Std.)","<input type=\"number\" id=\"f-perday\" min=\"0.5\" max=\"8\" step=\"0.5\" value=\""+(ed?ed.stundenProTag:1.5)+"\">") +
       '<div class="field full"><label>Lernziele / Themen (eine pro Zeile – optional, ermöglicht den KI-Plan)</label>'+
-        '<textarea id="f-ziele" rows="4" placeholder="z. B.&#10;Docker Netzwerke verstehen&#10;Eigene Images bauen&#10;Container vs. VM erklären"></textarea></div>'+
+        '<textarea id="f-ziele" rows="4" placeholder="z. B.&#10;Docker Netzwerke verstehen&#10;Eigene Images bauen&#10;Container vs. VM erklären">'+(ed?escapeHtml(ed.lernziele||""):"")+'</textarea></div>'+
     '</div>'+
     '<div class="form-actions">'+
-      '<button class="btn-primary" data-action="add-exam">Hinzufügen</button>'+
-      '<button class="btn-ghost" data-action="reset-form">Felder leeren</button>'+
+      (ed?
+        '<button class="btn-primary" data-action="save-exam-edit" data-id="'+ed.id+'">Speichern</button>'+
+        '<button class="btn-ghost" data-action="cancel-edit-exam">Abbrechen</button>'
+      :
+        '<button class="btn-primary" data-action="add-exam">Hinzufügen</button>'+
+        '<button class="btn-ghost" data-action="reset-form">Felder leeren</button>'
+      )+
     '</div>'+
     '<div class="form-hint" id="f-hint"></div>'+
-    '<div class="form-hint" id="f-info" style="display:block;color:var(--muted)">Mit Lernzielen erstellt die KI einen massgeschneiderten Plan. Ohne Lernziele wird ein Standardplan generiert.</div>'+
+    (ed? '' : '<div class="form-hint" id="f-info" style="display:block;color:var(--muted)">Mit Lernzielen erstellt die KI einen massgeschneiderten Plan. Ohne Lernziele wird ein Standardplan generiert.</div>')+
   '</div>';
   html += '<div class="section-label">Erfasste Prüfungen</div>';
   const sorted = state.exams.slice().sort((a,b)=> parseISO(a.datum)-parseISO(b.datum));
@@ -1006,6 +1044,7 @@ function viewPruefungen(){
       html += '<div class="card exam-row">'+cd+
         '<div class="ex-body"><h4>'+escapeHtml(e.fach)+(hatZiele?' <span class="tag-sr" style="color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)">Lernziele</span>':'')+'</h4>'+body+'</div>'+
         '<div class="ex-actions" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+actions+
+          '<button class="pill-btn neutral" data-action="edit-exam" data-id="'+e.id+'">✎ Bearbeiten</button>'+
           '<button class="pill-btn" data-action="delete-exam" data-id="'+e.id+'">Löschen</button></div>'+
       '</div>';
     });
@@ -1022,8 +1061,8 @@ function selectNote(id, val){
   for(let n=6;n>=3;n-=0.5){ const v=String(n); opts+='<option value="'+v+'"'+(v===val?" selected":"")+'>'+v+'</option>'; }
   return '<select id="'+id+'">'+opts+'</select>';
 }
-function selectLerntyp(id){
-  return '<select id="'+id+'">'+LERNTYPEN.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select>';
+function selectLerntyp(id, sel){
+  return '<select id="'+id+'">'+LERNTYPEN.map(t=>'<option value="'+t+'"'+(t===sel?" selected":"")+'>'+t+'</option>').join("")+'</select>';
 }
 
 function viewLernplan(){
@@ -1249,8 +1288,31 @@ function viewKarten(){
       '<div class="kr-actions">'+
         (cards.length? '<button class="btn-primary" data-action="start-review" data-id="'+e.id+'">'+(faellig?'Lernen ('+faellig+')':'Wiederholen')+'</button>' : '')+
         '<button class="pill-btn neutral" data-action="gen-quiz" data-id="'+e.id+'">'+(cards.length?'↻ Neu':'🃏 Erzeugen')+'</button>'+
+        '<button class="pill-btn neutral" data-action="manage-cards" data-id="'+e.id+'">'+(cardManageId===e.id?'Schliessen':'✎ Verwalten')+'</button>'+
       '</div>'+
     '</div>';
+    if(cardManageId===e.id){
+      html += '<div class="card" style="padding:20px 22px;margin-bottom:12px">';
+      if(cards.length){
+        cards.forEach(c=>{
+          html += '<div class="karten-row" style="padding:10px 0;border-bottom:1px solid var(--line)">'+
+            '<div class="kr-body"><h4 style="font-size:.92rem">'+escapeHtml(c.frage)+'</h4>'+
+              '<p>'+escapeHtml(c.antwort)+'</p></div>'+
+            '<div class="kr-actions"><button class="pill-btn" data-action="delete-card" data-id="'+c.id+'">Löschen</button></div>'+
+          '</div>';
+        });
+      } else {
+        html += '<p style="color:var(--muted);font-size:.9rem;margin-bottom:10px">Noch keine Karten – füge unten eine eigene hinzu.</p>';
+      }
+      html += '<div class="section-label">Eigene Karte hinzufügen</div>'+
+        '<div class="form-grid">'+
+          field("Frage","<input type=\"text\" id=\"mc-frage\" placeholder=\"Frage eingeben\">") +
+          field("Antwort","<input type=\"text\" id=\"mc-antwort\" placeholder=\"Antwort eingeben\">") +
+          '<div class="field full">'+field("Thema (optional)","<input type=\"text\" id=\"mc-thema\" placeholder=\"z. B. Kapitel 3\">")+'</div>'+
+        '</div>'+
+        '<div class="form-actions"><button class="btn-primary" data-action="add-card" data-id="'+e.id+'">Karte hinzufügen</button></div>'+
+      '</div>';
+    }
   });
   html += '<div class="info-note">💡 <div><strong>Spaced Repetition:</strong> Gewusste Karten kommen erst später wieder, schwierige öfter — so bleibt der Stoff sitzen.</div></div>';
   return html;
@@ -1445,6 +1507,9 @@ document.addEventListener("click", async (e)=>{
     return;
   }
   if(a==="add-exam"){ await addExamFromForm(); return; }
+  if(a==="edit-exam"){ editingExamId = el.dataset.id; render(); return; }
+  if(a==="cancel-edit-exam"){ editingExamId = null; render(); return; }
+  if(a==="save-exam-edit"){ await saveExamEdit(el.dataset.id); return; }
   if(a==="reset-form"){
     const x=byId("f-fach"); if(x) x.value="";
     const z=byId("f-ziele"); if(z) z.value="";
@@ -1507,6 +1572,22 @@ document.addEventListener("click", async (e)=>{
     review = { examId: ex.id, cards, idx: 0, flipped: false };
     render(); return;
   }
+  if(a==="manage-cards"){ cardManageId = (cardManageId===el.dataset.id) ? null : el.dataset.id; render(); return; }
+  if(a==="add-card"){
+    const ex = state.exams.find(x=>x.id===el.dataset.id); if(!ex) return;
+    const frage = (byId("mc-frage")?.value||"").trim();
+    const antwort = (byId("mc-antwort")?.value||"").trim();
+    const thema = (byId("mc-thema")?.value||"").trim();
+    if(!frage || !antwort){ toast("Bitte Frage und Antwort eingeben"); return; }
+    try{ await addCardRemote(ex, frage, antwort, thema); render(); toast("Karte hinzugefügt"); }
+    catch(err){ toast("Konnte Karte nicht speichern"); }
+    return;
+  }
+  if(a==="delete-card"){
+    try{ await deleteCardRemote(el.dataset.id); render(); toast("Karte gelöscht"); }
+    catch(err){ toast("Löschen fehlgeschlagen"); }
+    return;
+  }
   if(a==="card-flip"){ if(review){ review.flipped = !review.flipped; render(); } return; }
   if(a==="card-known" || a==="card-again"){
     if(!review) return;
@@ -1568,6 +1649,35 @@ async function addExamFromForm(){
     busy = false;
     const b2 = document.querySelector('[data-action="add-exam"]');
     if(b2){ b2.disabled = false; b2.textContent = "Hinzufügen"; }
+  }
+}
+
+async function saveExamEdit(id){
+  const fach = (byId("f-fach").value||"").trim();
+  const datum = byId("f-datum").value;
+  const note = parseFloat(byId("f-note").value);
+  const lerntyp = byId("f-lerntyp").value;
+  const schwer = parseInt(byId("f-schwer").value,10);
+  const lernziele = (byId("f-ziele") ? byId("f-ziele").value : "").trim();
+  const perdayRaw = parseFloat(byId("f-perday") ? byId("f-perday").value : "1.5");
+  const stundenProTag = (perdayRaw>=0.5 && perdayRaw<=8) ? perdayRaw : 1.5;
+  const hint = byId("f-hint");
+  const showHint = m=>{ if(hint){ hint.textContent=m; hint.classList.add("show"); } };
+  if(!fach || !datum){ showHint("Bitte Fach und Datum ausfüllen."); return; }
+  if(hint) hint.classList.remove("show");
+  if(busy) return; busy = true;
+  const btn = document.querySelector('[data-action="save-exam-edit"]');
+  if(btn){ btn.disabled = true; btn.textContent = "Speichern…"; }
+  try{
+    await updateExamRemote(id, { fach, datum, wunschnote:note, schwierigkeit:schwer, lerntyp, lernziele, stundenProTag });
+    editingExamId = null; render();
+    toast(escapeHtml(fach)+": Änderungen gespeichert");
+  }catch(err){
+    showHint("Speichern fehlgeschlagen – bitte erneut versuchen.");
+  }finally{
+    busy = false;
+    const b2 = document.querySelector('[data-action="save-exam-edit"]');
+    if(b2){ b2.disabled = false; b2.textContent = "Speichern"; }
   }
 }
 
