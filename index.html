@@ -1649,6 +1649,16 @@ async function boot(){
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   authState="loading"; renderRoot();
   supabase.auth.onAuthStateChange((event, sess)=> onAuth(event, sess));
+  // Falls onAuthStateChange (z.B. ohne aktive Session) nicht rechtzeitig feuert,
+  // bleibt sonst der Lade-Spinner für immer stehen -> Session direkt nachfragen.
+  try{
+    const { data } = await supabase.auth.getSession();
+    if(authState==="loading"){
+      await onAuth(data && data.session ? "SIGNED_IN" : "SIGNED_OUT", data && data.session);
+    }
+  }catch(err){
+    if(authState==="loading"){ dbErrorMsg=(err&&err.message)||String(err); authState="dberror"; renderRoot(); }
+  }
 }
 
 boot();
