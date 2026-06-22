@@ -185,10 +185,12 @@
   .field{display:flex;flex-direction:column;gap:6px}
   .field.full{grid-column:1 / -1}
   .field label{font-size:.82rem;color:var(--muted);font-weight:500}
-  .field input[type=text],.field input[type=date],.field input[type=number],.field select{
+  .field input[type=text],.field input[type=date],.field input[type=number],.field select,.field textarea{
     padding:11px 13px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);
     background:var(--surface-2);color:var(--text);font-size:.95rem;width:100%;
   }
+  .field textarea{resize:vertical;font-family:inherit;line-height:1.5;min-height:84px}
+  .field textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
   .field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
   .range-row{display:flex;align-items:center;gap:14px}
   .range-row input[type=range]{flex:1;accent-color:var(--primary);height:6px}
@@ -326,6 +328,54 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .loading-txt{color:var(--muted);text-align:center;font-size:.92rem}
 
+  /* ---------- Kalender ---------- */
+  .cal-card{padding:20px 22px;margin-bottom:8px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .cal-title{font-size:1.15rem;font-weight:800}
+  .cal-nav{width:36px;height:36px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface);color:var(--text);font-size:1.2rem;line-height:1}
+  .cal-nav:hover{background:var(--surface-2);border-color:var(--primary)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .cal-weekdays{margin-bottom:7px}
+  .cal-wd{text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .cal-cell{position:relative;min-height:74px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:7px 8px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:border-color .12s,background .12s}
+  .cal-cell:hover{border-color:var(--primary)}
+  .cal-cell.empty{background:transparent;border:none;cursor:default;min-height:0}
+  .cal-cell.today{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+  .cal-cell.has-exam{background:var(--orange-weak)}
+  .cal-num{font-size:.82rem;font-weight:700}
+  .cal-exam{font-size:.66rem;font-weight:600;color:var(--orange);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cal-dots{margin-top:auto;display:flex;gap:4px}
+  .cal-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .dot-exam{background:var(--orange)} .dot-open{background:var(--primary)} .dot-done{background:var(--green)}
+  .cal-legend{display:flex;gap:18px;margin-top:16px;font-size:.78rem;color:var(--muted);flex-wrap:wrap}
+  .cal-legend span{display:flex;align-items:center;gap:6px}
+  .cal-legend .cal-dot{width:9px;height:9px}
+
+  /* ---------- Karteikarten ---------- */
+  .karten-row{display:flex;align-items:center;gap:16px;padding:16px 18px;margin-bottom:12px}
+  .karten-row .kr-body{flex:1;min-width:0}
+  .karten-row .kr-body h4{font-size:1.05rem;font-weight:700}
+  .karten-row .kr-body p{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .karten-row .kr-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .karten-row .btn-primary{padding:9px 16px;font-size:.85rem}
+  .review-top{padding:14px 18px;margin-bottom:14px}
+  .review-meta{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center}
+  .flashcard{padding:44px 28px;min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;cursor:pointer;margin-bottom:16px}
+  .flashcard:hover{border-color:var(--primary)}
+  .fc-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .fc-text{font-size:1.3rem;font-weight:700;line-height:1.4}
+  .fc-hint{font-size:.78rem;color:var(--muted)}
+  .review-actions{display:flex;gap:12px}
+  .review-actions button{flex:1;padding:14px}
+  .rev-again{border-color:var(--orange);color:var(--orange)}
+  .rev-again:hover{background:var(--orange-weak)}
+
+  /* ---------- KI-Spinner Overlay ---------- */
+  .ai-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:80}
+  .ai-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:30px 36px;text-align:center;box-shadow:var(--shadow-lg)}
+  .ai-box .spinner{margin:0 auto 14px}
+  .ai-box .t{font-weight:600}
+
   /* ---------- Responsive ---------- */
   @media (max-width:980px){
     .grid-stats{grid-template-columns:repeat(2,1fr)}
@@ -349,6 +399,12 @@
     .topbar .tb-actions button{width:38px;height:38px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1rem}
     .view-head h2{font-size:1.55rem}
     .form-grid{grid-template-columns:1fr}
+    .cal-grid{gap:4px}
+    .cal-cell{min-height:58px;padding:5px 5px}
+    .cal-exam{display:none}
+    .karten-row{flex-direction:column;align-items:stretch}
+    .karten-row .kr-actions{justify-content:stretch}
+    .karten-row .kr-actions button{flex:1}
     .forecast{flex-direction:column;align-items:stretch;gap:12px}
     .forecast .fc-right{justify-content:space-between}
     .bar{max-width:none;width:auto;flex:1}
@@ -386,8 +442,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
      • anon public  → SUPABASE_ANON_KEY  (darf öffentlich sein, durch RLS geschützt)
    Danach einmalig schema.sql im Supabase SQL-Editor ausführen.
    ========================================================= */
-const SUPABASE_URL      = "https://vtrdtimbwkupebodpfva.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0cmR0aW1id2t1cGVib2RwZnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODcyMjEsImV4cCI6MjA5NzM2MzIyMX0.TJRbxUY1q00H-uwN0K4vrowpYUsARCEva0cA2XJ9Lsc";
+const SUPABASE_URL      = "https://DEIN-PROJEKT.supabase.co";
+const SUPABASE_ANON_KEY = "DEIN-ANON-KEY";
 
 /* =========================================================
    LernPilot – Logik
@@ -402,6 +458,8 @@ const NAV = [
   ["uebersicht","Übersicht","M3 12h4v8H3v-8zm7-9h4v17h-4V3zm7 5h4v12h-4V8z"],
   ["pruefungen","Prüfungen","M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"],
   ["lernplan","Lernplan","M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"],
+  ["kalender","Kalender","M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zM8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"],
+  ["karten","Karten","M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"],
   ["noten","Noten","M3 3v18h18M7 14l4-4 3 3 5-6"],
   ["statistiken","Statistiken","M18 20V10M12 20V4M6 20v-6"]
 ];
@@ -454,36 +512,62 @@ function schaetzeStunden(schwierigkeit, wunschnote){
   let h = basis * Math.max(0.7, ehrgeiz);
   return Math.min(40, Math.max(2, round05(h)));
 }
+function parseLernziele(str){
+  return String(str||"").split(/\r?\n|;|•|–|·/).map(s=>s.replace(/^[\s\-\*\d\.\)]+/,"").trim()).filter(Boolean);
+}
+function summeTag(bloecke, datum){ return bloecke.filter(b=>b.datum===datum).reduce((s,b)=>s+b.dauer,0); }
+
+// Regelbasierter Plan – sinnvolle Blockgrössen, an verfügbare Zeit/Tag angepasst,
+// Themen aus den Lernzielen. Wird als Fallback genutzt, wenn die KI nicht erreichbar ist.
 function generiereBloecke(exam, start){
   start = start || today();
   const examDate = parseISO(exam.datum);
-  const fenster = Math.round((examDate - start)/86400000) - 1;
-  const stunden = exam.geplanteStunden;
+  const lastDay = addDays(examDate, -1);
+  const perDay = Math.max(0.5, Number(exam.stundenProTag) || 1.5);
   const methoden = METHODEN[exam.lerntyp] || METHODEN["Lese/Schreib"];
+  const themen = parseLernziele(exam.lernziele);
+  const tage = [];
+  let d = new Date(start);
+  while(d <= lastDay){ tage.push(toISO(d)); d = addDays(d,1); }
+  if(!tage.length) tage = [toISO(start)];
+
   const bloecke = [];
-  const haeppchen = [];
-  let rest = stunden;
-  while(rest > 0){ const d = rest >= 1.5 ? 1.5 : Math.max(0.5, round05(rest)); haeppchen.push(d); rest = round05(rest - d); }
-  const n = haeppchen.length;
-  const tageVerfuegbar = Math.max(1, fenster);
-  let ersterTag = null;
-  haeppchen.forEach((dauer, i) => {
-    let offset = Math.floor((i+1) * tageVerfuegbar / (n+1));
-    offset = Math.min(tageVerfuegbar - 1, Math.max(0, offset));
-    const datum = toISO(addDays(start, offset));
-    if(ersterTag === null) ersterTag = addDays(start, offset);
-    bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum,
-      aufgabe: methoden[i % methoden.length], dauer, lerntyp: exam.lerntyp, erledigt: false, sr: false });
-  });
-  if(ersterTag){
-    [3,7,14].forEach(off => {
-      const d = addDays(ersterTag, off);
-      if(d < examDate && d > ersterTag){
-        bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum: toISO(d),
-          aufgabe: "Wiederholung (Spaced Repetition)", dauer: 0.5, lerntyp: exam.lerntyp, erledigt: false, sr: true });
+  let rest = exam.geplanteStunden;
+  let i = 0, guard = 0;
+  while(rest >= 0.5 && guard < tage.length*4 + 50){
+    const datum = tage[guard % tage.length];
+    const free = perDay - summeTag(bloecke, datum);
+    if(free >= 0.5){
+      let dauer = rest >= 1.5 ? 1.5 : Math.max(0.5, round05(rest));
+      dauer = Math.min(dauer, round05(free));
+      if(dauer >= 0.5){
+        const thema = themen.length ? themen[i % themen.length] : null;
+        const aufgabe = thema ? (methoden[i % methoden.length] + ": " + thema) : methoden[i % methoden.length];
+        bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum, aufgabe, thema,
+          dauer, lerntyp: exam.lerntyp, erledigt: false, sr: false });
+        rest = round05(rest - dauer);
+        i++;
       }
-    });
+    }
+    guard++;
   }
+  if(rest >= 0.5){ // Restzeit notfalls auf den letzten Tag
+    const datum = tage[tage.length-1];
+    const thema = themen.length ? themen[i % themen.length] : null;
+    bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum,
+      aufgabe: (thema? methoden[i % methoden.length]+": "+thema : methoden[i % methoden.length]),
+      thema, dauer: rest, lerntyp: exam.lerntyp, erledigt: false, sr: false });
+  }
+
+  const ersterTag = bloecke.length ? parseISO(bloecke[0].datum) : start;
+  [3,7,14].forEach(off => {
+    const dd = addDays(ersterTag, off);
+    if(dd < examDate && dd > ersterTag){
+      bloecke.push({ id: uid(), examId: exam.id, fach: exam.fach, datum: toISO(dd),
+        aufgabe: "Wiederholung (Spaced Repetition)", thema: null, dauer: 0.5,
+        lerntyp: exam.lerntyp, erledigt: false, sr: true });
+    }
+  });
   return bloecke;
 }
 
@@ -518,7 +602,7 @@ function seed(){
     const iso = toISO(addDays(today(), -i));
     if(!doneDays.has(iso)){
       st.blocks.push({ id:uid(), examId:p.id, fach:p.fach, datum:iso,
-        aufgabe:"Kurze Wiederholung", dauer:0.5, lerntyp:p.lerntyp, erledigt:true, sr:false });
+        aufgabe:"Kurze Wiederholung", thema:null, dauer:0.5, lerntyp:p.lerntyp, erledigt:true, sr:false });
       doneDays.add(iso);
     }
   }
@@ -597,8 +681,10 @@ let authState = "loading";       // loading | setup | auth | recovery | dberror 
 let dbErrorMsg = "";
 let busy = false;
 
-let state = { exams: [], blocks: [], settings: { darkMode:false } };
+let state = { exams: [], blocks: [], flashcards: [], settings: { darkMode:false } };
 let view = "uebersicht";
+let calMonth = null;        // erster Tag des angezeigten Monats (Date)
+let review = null;          // { examId, cards:[...], idx, flipped }
 
 function configured(){
   return SUPABASE_URL && SUPABASE_ANON_KEY &&
@@ -610,23 +696,31 @@ function examFromRow(r){
   return { id:r.id, fach:r.fach, datum:r.datum, wunschnote:Number(r.wunschnote),
     schwierigkeit:Number(r.schwierigkeit), lerntyp:r.lerntyp,
     geplanteStunden:Number(r.geplante_stunden),
+    lernziele:(r.lernziele||""), stundenProTag:(r.stunden_pro_tag==null?1.5:Number(r.stunden_pro_tag)),
     erreichteNote:(r.erreichte_note==null ? null : Number(r.erreichte_note)) };
 }
 function blockFromRow(r){
-  return { id:r.id, examId:r.exam_id, fach:r.fach, datum:r.datum, aufgabe:r.aufgabe,
+  return { id:r.id, examId:r.exam_id, fach:r.fach, datum:r.datum, aufgabe:r.aufgabe, thema:(r.thema||null),
     dauer:Number(r.dauer), lerntyp:r.lerntyp, erledigt:!!r.erledigt, sr:!!r.sr };
+}
+function cardFromRow(r){
+  return { id:r.id, examId:r.exam_id, fach:r.fach, frage:r.frage, antwort:r.antwort,
+    thema:(r.thema||null), box:Number(r.box)||0, faellig:r.faellig };
 }
 
 async function loadAll(){
-  const [ex, bl, pr] = await Promise.all([
+  const [ex, bl, fc, pr] = await Promise.all([
     supabase.from("exams").select("*"),
     supabase.from("blocks").select("*"),
+    supabase.from("flashcards").select("*"),
     supabase.from("profiles").select("dark_mode").eq("id", userId).maybeSingle()
   ]);
   if(ex.error) throw ex.error;
   if(bl.error) throw bl.error;
-  state.exams  = (ex.data||[]).map(examFromRow);
-  state.blocks = (bl.data||[]).map(blockFromRow);
+  if(fc.error) throw fc.error;
+  state.exams      = (ex.data||[]).map(examFromRow);
+  state.blocks     = (bl.data||[]).map(blockFromRow);
+  state.flashcards = (fc.data||[]).map(cardFromRow);
   state.settings = { darkMode: !!(pr.data && pr.data.dark_mode) };
 }
 
@@ -634,27 +728,97 @@ async function addExamRemote(data){
   const geplant = schaetzeStunden(data.schwierigkeit, data.wunschnote);
   const { data:exRow, error } = await supabase.from("exams").insert({
     user_id:userId, fach:data.fach, datum:data.datum, wunschnote:data.wunschnote,
-    schwierigkeit:data.schwierigkeit, lerntyp:data.lerntyp, geplante_stunden:geplant, erreichte_note:null
+    schwierigkeit:data.schwierigkeit, lerntyp:data.lerntyp, geplante_stunden:geplant,
+    lernziele:(data.lernziele||null), stunden_pro_tag:(data.stundenProTag||1.5), erreichte_note:null
   }).select().single();
   if(error) throw error;
   const exam = examFromRow(exRow);
   state.exams.push(exam);
-  const bl = generiereBloecke(exam);
-  if(bl.length){
-    const rows = bl.map(b=>({ user_id:userId, exam_id:exam.id, fach:b.fach, datum:b.datum,
-      aufgabe:b.aufgabe, dauer:b.dauer, lerntyp:b.lerntyp, erledigt:b.erledigt, sr:b.sr }));
-    const { data:blRows, error:be } = await supabase.from("blocks").insert(rows).select();
-    if(be) throw be;
-    state.blocks.push(...(blRows||[]).map(blockFromRow));
-  }
   return exam;
+}
+
+// Blöcke einer Prüfung löschen (DB + State)
+async function deleteBlocksForExam(examId){
+  const { error } = await supabase.from("blocks").delete().eq("exam_id", examId);
+  if(error) throw error;
+  state.blocks = state.blocks.filter(b=>b.examId!==examId);
+}
+
+// Blöcke (App-Form) für eine Prüfung speichern
+async function insertBlocksRemote(exam, bloecke){
+  if(!bloecke.length) return;
+  const rows = bloecke.map(b=>({ user_id:userId, exam_id:exam.id, fach:exam.fach, datum:b.datum,
+    aufgabe:b.aufgabe, thema:(b.thema||null), dauer:b.dauer, lerntyp:exam.lerntyp,
+    erledigt:!!b.erledigt, sr:!!b.sr }));
+  const { data:blRows, error } = await supabase.from("blocks").insert(rows).select();
+  if(error) throw error;
+  state.blocks.push(...(blRows||[]).map(blockFromRow));
+}
+
+// Aufruf der Vercel-Function /api/ai (KI). Wirft, wenn nicht erreichbar.
+async function aiCall(payload){
+  const res = await fetch("/api/ai", {
+    method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(payload)
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ("HTTP "+res.status));
+  return data;
+}
+
+// Lernplan erstellen: zuerst KI, sonst regelbasierter Fallback. Ersetzt bestehende Blöcke.
+async function planExam(exam){
+  await deleteBlocksForExam(exam.id);
+  let bloecke = null, viaKI = false;
+  try{
+    const out = await aiCall({ action:"plan", exam:{
+      fach:exam.fach, datum:exam.datum, wunschnote:exam.wunschnote, schwierigkeit:exam.schwierigkeit,
+      lerntyp:exam.lerntyp, lernziele:exam.lernziele, stundenProTag:exam.stundenProTag, geplanteStunden:exam.geplanteStunden
+    }, heute: toISO(today()) });
+    if(out && Array.isArray(out.blocks) && out.blocks.length){
+      bloecke = out.blocks
+        .filter(b=>b && b.datum && daysUntil(b.datum) >= 0 && daysUntil(b.datum) <= daysUntil(exam.datum))
+        .map(b=>({ datum:b.datum, aufgabe:String(b.aufgabe||b.thema||"Lernblock"), thema:(b.thema||null),
+          dauer: Math.min(3, Math.max(0.5, round05(Number(b.dauer)||1))), sr: !!b.sr, erledigt:false }));
+      if(bloecke.length) viaKI = true;
+    }
+  }catch(_){ /* Fallback unten */ }
+  if(!bloecke || !bloecke.length){ bloecke = generiereBloecke(exam); }
+  await insertBlocksRemote(exam, bloecke);
+  return viaKI;
+}
+
+// KI-Karteikarten erzeugen und speichern (ersetzt bestehende dieser Prüfung)
+async function generateQuizRemote(exam, anzahl){
+  const out = await aiCall({ action:"quiz", fach:exam.fach, lernziele:exam.lernziele, anzahl:(anzahl||12) });
+  if(!out || !Array.isArray(out.cards) || !out.cards.length) throw new Error("Keine Karten erhalten.");
+  await supabase.from("flashcards").delete().eq("exam_id", exam.id);
+  state.flashcards = state.flashcards.filter(c=>c.examId!==exam.id);
+  const rows = out.cards.filter(c=>c && c.frage && c.antwort).map(c=>({
+    user_id:userId, exam_id:exam.id, fach:exam.fach, frage:String(c.frage), antwort:String(c.antwort),
+    thema:(c.thema||null), box:0, faellig:toISO(today()) }));
+  const { data:ins, error } = await supabase.from("flashcards").insert(rows).select();
+  if(error) throw error;
+  state.flashcards.push(...(ins||[]).map(cardFromRow));
+  return ins.length;
+}
+
+// Karte bewertet -> Spaced Repetition aktualisieren
+async function markCardRemote(id, gewusst){
+  const c = state.flashcards.find(x=>x.id===id); if(!c) return;
+  const INTERVALL = [1,2,4,7,14,30];
+  const box = gewusst ? Math.min(5, c.box+1) : 0;
+  const faellig = toISO(addDays(today(), INTERVALL[box]));
+  c.box = box; c.faellig = faellig;
+  const { error } = await supabase.from("flashcards").update({ box, faellig }).eq("id", id);
+  if(error){ toast("Konnte nicht speichern"); }
 }
 
 async function deleteExamRemote(id){
   const { error } = await supabase.from("exams").delete().eq("id", id);
   if(error) throw error;
-  state.exams  = state.exams.filter(e=>e.id!==id);
-  state.blocks = state.blocks.filter(b=>b.examId!==id);
+  state.exams      = state.exams.filter(e=>e.id!==id);
+  state.blocks     = state.blocks.filter(b=>b.examId!==id);
+  state.flashcards = state.flashcards.filter(c=>c.examId!==id);
 }
 
 async function toggleBlockRemote(id){
@@ -679,11 +843,13 @@ async function setDarkModeRemote(v){
 }
 
 async function clearAllRemote(reRender){
-  let r = await supabase.from("blocks").delete().eq("user_id", userId);
+  let r = await supabase.from("flashcards").delete().eq("user_id", userId);
+  if(r.error) throw r.error;
+  r = await supabase.from("blocks").delete().eq("user_id", userId);
   if(r.error) throw r.error;
   r = await supabase.from("exams").delete().eq("user_id", userId);
   if(r.error) throw r.error;
-  state.exams = []; state.blocks = [];
+  state.exams = []; state.blocks = []; state.flashcards = [];
   if(reRender){ view="uebersicht"; render(); }
 }
 
@@ -697,11 +863,12 @@ async function loadDemoRemote(){
   const idMap = {};
   local.exams.forEach((e,i)=>{ if(insEx[i]) idMap[e.id] = insEx[i].id; });
   const blockRows = local.blocks.map(b=>({ user_id:userId, exam_id:(idMap[b.examId]||null), fach:b.fach, datum:b.datum,
-    aufgabe:b.aufgabe, dauer:b.dauer, lerntyp:b.lerntyp, erledigt:b.erledigt, sr:b.sr }));
+    aufgabe:b.aufgabe, thema:(b.thema||null), dauer:b.dauer, lerntyp:b.lerntyp, erledigt:b.erledigt, sr:b.sr }));
   const { data:insBl, error:be } = await supabase.from("blocks").insert(blockRows).select();
   if(be) throw be;
-  state.exams  = (insEx||[]).map(examFromRow);
-  state.blocks = (insBl||[]).map(blockFromRow);
+  state.exams      = (insEx||[]).map(examFromRow);
+  state.blocks     = (insBl||[]).map(blockFromRow);
+  state.flashcards = [];
 }
 
 /* ---------- Auth ---------- */
@@ -801,12 +968,16 @@ function viewPruefungen(){
       '<div class="field full"><label>Schwierigkeit (1 leicht – 6 sehr schwer)</label>'+
         '<div class="range-row"><input type="range" id="f-schwer" min="1" max="6" step="1" value="4">'+
         '<span class="range-val" id="f-schwer-val">4</span></div></div>'+
+      field("Lernzeit pro Tag (Std.)","<input type=\"number\" id=\"f-perday\" min=\"0.5\" max=\"8\" step=\"0.5\" value=\"1.5\">") +
+      '<div class="field full"><label>Lernziele / Themen (eine pro Zeile – optional, ermöglicht den KI-Plan)</label>'+
+        '<textarea id="f-ziele" rows="4" placeholder="z. B.&#10;Docker Netzwerke verstehen&#10;Eigene Images bauen&#10;Container vs. VM erklären"></textarea></div>'+
     '</div>'+
     '<div class="form-actions">'+
       '<button class="btn-primary" data-action="add-exam">Hinzufügen</button>'+
       '<button class="btn-ghost" data-action="reset-form">Felder leeren</button>'+
     '</div>'+
     '<div class="form-hint" id="f-hint"></div>'+
+    '<div class="form-hint" id="f-info" style="display:block;color:var(--muted)">Mit Lernzielen erstellt die KI einen massgeschneiderten Plan. Ohne Lernziele wird ein Standardplan generiert.</div>'+
   '</div>';
   html += '<div class="section-label">Erfasste Prüfungen</div>';
   const sorted = state.exams.slice().sort((a,b)=> parseISO(a.datum)-parseISO(b.datum));
@@ -825,9 +996,14 @@ function viewPruefungen(){
         const h = summe(bloeckeVonExam(e.id),b=>b.dauer);
         body = '<p>'+fmtShort(e.datum)+' · Ziel: Note '+e.wunschnote+' · '+fmtH(h)+' · '+e.lerntyp+'</p>';
       }
+      const hatZiele = parseLernziele(e.lernziele).length > 0;
+      const actions = erledigt ? '' :
+        '<button class="pill-btn neutral" data-action="gen-plan" data-id="'+e.id+'" title="Lernplan neu erzeugen">↻ KI-Plan</button>'+
+        '<button class="pill-btn neutral" data-action="gen-quiz" data-id="'+e.id+'" title="Karteikarten erzeugen">🃏 Karten</button>';
       html += '<div class="card exam-row">'+cd+
-        '<div class="ex-body"><h4>'+escapeHtml(e.fach)+'</h4>'+body+'</div>'+
-        '<div class="ex-actions"><button class="pill-btn" data-action="delete-exam" data-id="'+e.id+'">Löschen</button></div>'+
+        '<div class="ex-body"><h4>'+escapeHtml(e.fach)+(hatZiele?' <span class="tag-sr" style="color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)">Lernziele</span>':'')+'</h4>'+body+'</div>'+
+        '<div class="ex-actions" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+actions+
+          '<button class="pill-btn" data-action="delete-exam" data-id="'+e.id+'">Löschen</button></div>'+
       '</div>';
     });
   }
@@ -866,11 +1042,12 @@ function viewLernplan(){
 }
 function blockRow(b){
   const srTag = b.sr ? '<span class="tag-sr">SR Wdh.</span>' : "";
+  const themaTag = b.thema ? '<span class="tag-sr" style="color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent)">'+escapeHtml(b.thema)+'</span>' : "";
   return '<div class="card block'+(b.erledigt?" done":"")+'">'+
     '<button class="check'+(b.erledigt?" done":"")+'" data-action="toggle-block" data-id="'+b.id+'" aria-label="Erledigt umschalten">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'+
     '</button>'+
-    '<div class="bl-body"><h4>'+escapeHtml(b.fach)+' '+srTag+'</h4><p>'+escapeHtml(b.aufgabe)+' · '+fmtH(b.dauer)+'</p></div>'+
+    '<div class="bl-body"><h4>'+escapeHtml(b.fach)+' '+srTag+' '+themaTag+'</h4><p>'+escapeHtml(b.aufgabe)+' · '+fmtH(b.dauer)+'</p></div>'+
     '<div class="status'+(b.erledigt?" done":"")+'">'+(b.erledigt?"✓ Erledigt":"Offen")+'</div>'+
   '</div>';
 }
@@ -967,7 +1144,116 @@ function viewStatistiken(){
   return html;
 }
 
-const VIEWS = { uebersicht:viewUebersicht, pruefungen:viewPruefungen, lernplan:viewLernplan, noten:viewNoten, statistiken:viewStatistiken };
+/* ---------- Kalenderansicht ---------- */
+function viewKalender(){
+  if(!calMonth){ const t=today(); calMonth = new Date(t.getFullYear(), t.getMonth(), 1); }
+  const jahr = calMonth.getFullYear(), monat = calMonth.getMonth();
+  const erster = new Date(jahr, monat, 1);
+  const startIdx = (erster.getDay()+6)%7;           // Mo=0
+  const tageImMonat = new Date(jahr, monat+1, 0).getDate();
+  const heuteIso = toISO(today());
+
+  // Termine pro Tag aufbereiten
+  const blocksByDay = {}, examsByDay = {};
+  state.blocks.forEach(b=>{ (blocksByDay[b.datum]=blocksByDay[b.datum]||[]).push(b); });
+  state.exams.filter(e=>e.erreichteNote===null).forEach(e=>{ (examsByDay[e.datum]=examsByDay[e.datum]||[]).push(e); });
+
+  let html = '<div class="view-head"><h2>Kalender</h2></div>';
+  html += '<div class="card cal-card">'+
+    '<div class="cal-head">'+
+      '<button class="cal-nav" data-action="cal-prev" aria-label="Vorheriger Monat">‹</button>'+
+      '<div class="cal-title">'+MONATE[monat]+' '+jahr+'</div>'+
+      '<button class="cal-nav" data-action="cal-next" aria-label="Nächster Monat">›</button>'+
+    '</div>'+
+    '<div class="cal-grid cal-weekdays">'+WT_KURZ.map(w=>'<div class="cal-wd">'+w+'</div>').join("")+'</div>'+
+    '<div class="cal-grid">';
+  for(let i=0;i<startIdx;i++) html += '<div class="cal-cell empty"></div>';
+  for(let day=1; day<=tageImMonat; day++){
+    const iso = toISO(new Date(jahr, monat, day));
+    const bl = blocksByDay[iso]||[], ex = examsByDay[iso]||[];
+    const offen = bl.filter(b=>!b.erledigt).length, erl = bl.filter(b=>b.erledigt).length;
+    const istHeute = iso===heuteIso;
+    let dots = '';
+    if(ex.length) dots += '<span class="cal-dot dot-exam" title="Prüfung"></span>';
+    if(offen)     dots += '<span class="cal-dot dot-open" title="offene Blöcke"></span>';
+    if(erl)       dots += '<span class="cal-dot dot-done" title="erledigt"></span>';
+    html += '<div class="cal-cell'+(istHeute?' today':'')+(ex.length?' has-exam':'')+'" data-action="cal-day" data-iso="'+iso+'">'+
+      '<span class="cal-num">'+day+'</span>'+
+      (ex.length? '<span class="cal-exam">'+escapeHtml(ex[0].fach)+(ex.length>1?' +'+(ex.length-1):'')+'</span>' : '')+
+      '<span class="cal-dots">'+dots+'</span></div>';
+  }
+  html += '</div>'+
+    '<div class="cal-legend"><span><i class="cal-dot dot-exam"></i> Prüfung</span>'+
+      '<span><i class="cal-dot dot-open"></i> offen</span>'+
+      '<span><i class="cal-dot dot-done"></i> erledigt</span></div>'+
+  '</div>';
+
+  // Detail des gewählten Tages
+  const selIso = viewKalender.sel || heuteIso;
+  const selBl = (blocksByDay[selIso]||[]).slice().sort((a,b)=>a.sr-b.sr);
+  const selEx = examsByDay[selIso]||[];
+  html += '<div class="section-label">'+fmtLong(selIso)+'</div>';
+  if(!selBl.length && !selEx.length){
+    html += '<div class="card empty"><p>Keine Einträge an diesem Tag.</p></div>';
+  } else {
+    selEx.forEach(e=> html += '<div class="card exam-row"><div class="countdown cd-amber">📝</div>'+
+      '<div class="ex-body"><h4>Prüfung: '+escapeHtml(e.fach)+'</h4><p>Ziel: Note '+e.wunschnote+' · '+e.lerntyp+'</p></div></div>');
+    selBl.forEach(b=> html += blockRow(b));
+  }
+  return html;
+}
+
+/* ---------- Karteikarten (KI-Quiz) ---------- */
+function viewKarten(){
+  let html = '<div class="view-head"><h2>Karteikarten</h2></div>';
+
+  // Review-Modus aktiv?
+  if(review && review.cards.length){
+    const c = review.cards[review.idx];
+    const fortschritt = Math.round((review.idx)/review.cards.length*100);
+    html += '<div class="card review-top"><div class="ov-bar"><i style="width:'+fortschritt+'%;background:var(--primary)"></i></div>'+
+      '<div class="review-meta">Karte '+(review.idx+1)+' / '+review.cards.length+(c.thema?' · '+escapeHtml(c.thema):'')+'</div></div>';
+    html += '<div class="card flashcard" data-action="card-flip">'+
+      '<div class="fc-label">'+(review.flipped?'Antwort':'Frage')+'</div>'+
+      '<div class="fc-text">'+escapeHtml(review.flipped? c.antwort : c.frage)+'</div>'+
+      '<div class="fc-hint">'+(review.flipped?'':'Tippen zum Umdrehen')+'</div>'+
+    '</div>';
+    if(review.flipped){
+      html += '<div class="review-actions">'+
+        '<button class="btn-ghost rev-again" data-action="card-again">Nochmal</button>'+
+        '<button class="btn-primary rev-known" data-action="card-known">Gewusst</button>'+
+      '</div>';
+    } else {
+      html += '<div class="review-actions"><button class="btn-primary" data-action="card-flip" style="flex:1">Umdrehen</button></div>';
+    }
+    html += '<div style="margin-top:14px;text-align:center"><button class="pill-btn" data-action="review-stop">Beenden</button></div>';
+    return html;
+  }
+
+  // Übersicht je Prüfung
+  const exams = state.exams.filter(e=>e.erreichteNote===null).sort((a,b)=>parseISO(a.datum)-parseISO(b.datum));
+  if(!exams.length){
+    html += '<div class="card empty"><h4>Noch keine Prüfungen</h4><p>Erfasse eine Prüfung mit Lernzielen, dann kannst du daraus Karteikarten erzeugen.</p></div>';
+    return html;
+  }
+  const heuteIso = toISO(today());
+  exams.forEach(e=>{
+    const cards = state.flashcards.filter(c=>c.examId===e.id);
+    const faellig = cards.filter(c=> c.faellig <= heuteIso).length;
+    html += '<div class="card karten-row">'+
+      '<div class="kr-body"><h4>'+escapeHtml(e.fach)+'</h4>'+
+        '<p>'+(cards.length? cards.length+' Karten · '+faellig+' fällig' : 'Noch keine Karten')+'</p></div>'+
+      '<div class="kr-actions">'+
+        (cards.length? '<button class="btn-primary" data-action="start-review" data-id="'+e.id+'">'+(faellig?'Lernen ('+faellig+')':'Wiederholen')+'</button>' : '')+
+        '<button class="pill-btn neutral" data-action="gen-quiz" data-id="'+e.id+'">'+(cards.length?'↻ Neu':'🃏 Erzeugen')+'</button>'+
+      '</div>'+
+    '</div>';
+  });
+  html += '<div class="info-note">💡 <div><strong>Spaced Repetition:</strong> Gewusste Karten kommen erst später wieder, schwierige öfter — so bleibt der Stoff sitzen.</div></div>';
+  return html;
+}
+
+const VIEWS = { uebersicht:viewUebersicht, pruefungen:viewPruefungen, lernplan:viewLernplan, kalender:viewKalender, karten:viewKarten, noten:viewNoten, statistiken:viewStatistiken };
 
 /* =========================================================
    4) SCREENS (Auth / Setup / App-Shell)
@@ -1158,6 +1444,8 @@ document.addEventListener("click", async (e)=>{
   if(a==="add-exam"){ await addExamFromForm(); return; }
   if(a==="reset-form"){
     const x=byId("f-fach"); if(x) x.value="";
+    const z=byId("f-ziele"); if(z) z.value="";
+    const pd=byId("f-perday"); if(pd) pd.value="1.5";
     const sl=byId("f-schwer"); if(sl){ sl.value=4; const v=byId("f-schwer-val"); if(v) v.textContent="4"; }
     return;
   }
@@ -1180,6 +1468,52 @@ document.addEventListener("click", async (e)=>{
     catch(err){ toast("Löschen fehlgeschlagen"); }
     return;
   }
+
+  // --- KI: Plan / Quiz ---
+  if(a==="gen-plan"){
+    const ex = state.exams.find(x=>x.id===el.dataset.id); if(!ex) return;
+    showAi("KI erstellt deinen Lernplan…");
+    try{ const viaKI = await planExam(ex); view="lernplan"; render(); toast(viaKI? "KI-Lernplan erstellt" : "Plan erstellt (Standard – KI nicht erreichbar)"); }
+    catch(err){ toast("Plan fehlgeschlagen"); }
+    finally{ hideAi(); }
+    return;
+  }
+  if(a==="gen-quiz"){
+    const ex = state.exams.find(x=>x.id===el.dataset.id); if(!ex) return;
+    if(parseLernziele(ex.lernziele).length===0 && !window.confirm("Diese Prüfung hat keine Lernziele. Die KI erstellt dann Karten allgemein zum Fach. Trotzdem fortfahren?")) return;
+    showAi("KI erstellt Karteikarten…");
+    try{ const n = await generateQuizRemote(ex, 12); view="karten"; render(); toast(n+" Karten erstellt"); }
+    catch(err){ toast("Karten fehlgeschlagen – KI erreichbar? (nur auf Vercel)"); }
+    finally{ hideAi(); }
+    return;
+  }
+
+  // --- Kalender ---
+  if(a==="cal-prev"){ calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); render(); return; }
+  if(a==="cal-next"){ calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); render(); return; }
+  if(a==="cal-day"){ viewKalender.sel = el.dataset.iso; render(); return; }
+
+  // --- Karteikarten Review ---
+  if(a==="start-review"){
+    const ex = state.exams.find(x=>x.id===el.dataset.id); if(!ex) return;
+    const heuteIso = toISO(today());
+    let cards = state.flashcards.filter(c=>c.examId===ex.id && c.faellig <= heuteIso);
+    if(!cards.length) cards = state.flashcards.filter(c=>c.examId===ex.id); // sonst alle wiederholen
+    if(!cards.length){ toast("Keine Karten vorhanden"); return; }
+    cards = cards.slice().sort(()=>Math.random()-0.5);
+    review = { examId: ex.id, cards, idx: 0, flipped: false };
+    render(); return;
+  }
+  if(a==="card-flip"){ if(review){ review.flipped = !review.flipped; render(); } return; }
+  if(a==="card-known" || a==="card-again"){
+    if(!review) return;
+    const c = review.cards[review.idx];
+    await markCardRemote(c.id, a==="card-known");
+    if(review.idx+1 < review.cards.length){ review.idx++; review.flipped=false; render(); }
+    else { review = null; render(); toast("Runde fertig – stark!"); }
+    return;
+  }
+  if(a==="review-stop"){ review = null; render(); return; }
 });
 
 document.addEventListener("input", (e)=>{
@@ -1191,12 +1525,24 @@ document.addEventListener("submit", (e)=>{
   else if(e.target.id==="recovery-form"){ e.preventDefault(); submitRecovery(); }
 });
 
+function showAi(text){
+  hideAi();
+  const o = document.createElement("div");
+  o.className = "ai-overlay"; o.id = "ai-overlay";
+  o.innerHTML = '<div class="ai-box"><div class="spinner"></div><div class="t">'+escapeHtml(text||"KI arbeitet…")+'</div></div>';
+  document.body.appendChild(o);
+}
+function hideAi(){ const o = byId("ai-overlay"); if(o) o.remove(); }
+
 async function addExamFromForm(){
   const fach = (byId("f-fach").value||"").trim();
   const datum = byId("f-datum").value;
   const note = parseFloat(byId("f-note").value);
   const lerntyp = byId("f-lerntyp").value;
   const schwer = parseInt(byId("f-schwer").value,10);
+  const lernziele = (byId("f-ziele") ? byId("f-ziele").value : "").trim();
+  const perdayRaw = parseFloat(byId("f-perday") ? byId("f-perday").value : "1.5");
+  const stundenProTag = (perdayRaw>=0.5 && perdayRaw<=8) ? perdayRaw : 1.5;
   const hint = byId("f-hint");
   const showHint = m=>{ if(hint){ hint.textContent=m; hint.classList.add("show"); } };
   if(!fach || !datum){ showHint("Bitte Fach und Datum ausfüllen."); return; }
@@ -1205,13 +1551,17 @@ async function addExamFromForm(){
   if(busy) return; busy = true;
   const btn = document.querySelector('[data-action="add-exam"]');
   if(btn){ btn.disabled = true; btn.textContent = "Speichern…"; }
+  const hatZiele = parseLernziele(lernziele).length > 0;
+  showAi(hatZiele ? "KI erstellt deinen Lernplan…" : "Lernplan wird erstellt…");
   try{
-    const exam = await addExamRemote({ fach, datum, wunschnote:note, schwierigkeit:schwer, lerntyp });
+    const exam = await addExamRemote({ fach, datum, wunschnote:note, schwierigkeit:schwer, lerntyp, lernziele, stundenProTag });
+    const viaKI = await planExam(exam);
     view = "lernplan"; render();
-    toast(escapeHtml(fach)+": "+fmtH(exam.geplanteStunden)+" eingeplant");
+    toast(viaKI ? (escapeHtml(fach)+": KI-Plan erstellt") : (escapeHtml(fach)+": "+fmtH(exam.geplanteStunden)+" eingeplant"));
   }catch(err){
     showHint("Speichern fehlgeschlagen – bitte erneut versuchen.");
   }finally{
+    hideAi();
     busy = false;
     const b2 = document.querySelector('[data-action="add-exam"]');
     if(b2){ b2.disabled = false; b2.textContent = "Hinzufügen"; }
