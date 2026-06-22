@@ -1651,14 +1651,25 @@ async function boot(){
   supabase.auth.onAuthStateChange((event, sess)=> onAuth(event, sess));
   // Falls onAuthStateChange (z.B. ohne aktive Session) nicht rechtzeitig feuert,
   // bleibt sonst der Lade-Spinner für immer stehen -> Session direkt nachfragen.
+  // Mit Timeout: ein hängender/ungültiger Refresh-Token (Browser-Lock) darf den
+  // Spinner nicht für immer blockieren -> dann lokale Auth-Daten zurücksetzen.
   try{
-    const { data } = await supabase.auth.getSession();
+    const data = await withTimeout(supabase.auth.getSession(), 6000);
     if(authState==="loading"){
-      await onAuth(data && data.session ? "SIGNED_IN" : "SIGNED_OUT", data && data.session);
+      await onAuth(data && data.data && data.data.session ? "SIGNED_IN" : "SIGNED_OUT", data && data.data && data.data.session);
     }
   }catch(err){
-    if(authState==="loading"){ dbErrorMsg=(err&&err.message)||String(err); authState="dberror"; renderRoot(); }
+    if(authState==="loading"){
+      try{ await supabase.auth.signOut({ scope:"local" }); }catch(_){}
+      authState="auth"; renderRoot();
+    }
   }
+}
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=> setTimeout(()=> rej(new Error("timeout")), ms))
+  ]);
 }
 
 boot();
