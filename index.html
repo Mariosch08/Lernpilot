@@ -1649,10 +1649,10 @@ async function boot(){
   if(!configured()){ authState="setup"; renderRoot(); return; }
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   authState="loading"; renderRoot();
-  // Harter Notausgang: egal wo es hängt, nach 15s nie für immer im Spinner bleiben.
+  // Harter Notausgang: egal wo es hängt, nach 2s nie für immer im Spinner bleiben.
   setTimeout(()=>{
     if(authState==="loading"){ dbErrorMsg="Zeitüberschreitung beim Laden."; authState="dberror"; renderRoot(); }
-  }, 15000);
+  }, 2000);
   supabase.auth.onAuthStateChange((event, sess)=> onAuth(event, sess));
   // Falls onAuthStateChange (z.B. ohne aktive Session) nicht rechtzeitig feuert,
   // bleibt sonst der Lade-Spinner für immer stehen -> Session direkt nachfragen.
