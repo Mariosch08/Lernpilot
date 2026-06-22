@@ -710,12 +710,14 @@ function cardFromRow(r){
 }
 
 async function loadAll(){
+  console.log("[LernPilot] loadAll: start", new Date().toISOString());
   const [ex, bl, fc, pr] = await Promise.all([
-    supabase.from("exams").select("*"),
-    supabase.from("blocks").select("*"),
-    supabase.from("flashcards").select("*"),
-    supabase.from("profiles").select("dark_mode").eq("id", userId).maybeSingle()
+    supabase.from("exams").select("*").then(r=>{ console.log("[LernPilot] exams ok", r.error||r.data?.length); return r; }),
+    supabase.from("blocks").select("*").then(r=>{ console.log("[LernPilot] blocks ok", r.error||r.data?.length); return r; }),
+    supabase.from("flashcards").select("*").then(r=>{ console.log("[LernPilot] flashcards ok", r.error||r.data?.length); return r; }),
+    supabase.from("profiles").select("dark_mode").eq("id", userId).maybeSingle().then(r=>{ console.log("[LernPilot] profiles ok", r.error||r.data); return r; })
   ]);
+  console.log("[LernPilot] loadAll: done", new Date().toISOString());
   if(ex.error) throw ex.error;
   if(bl.error) throw bl.error;
   if(fc.error) throw fc.error;
@@ -1618,6 +1620,7 @@ async function submitRecovery(){
    7) AUTH-LIFECYCLE + BOOT
    ========================================================= */
 async function onAuth(event, sess){
+  console.log("[LernPilot] onAuth event:", event, new Date().toISOString());
   if(event==="PASSWORD_RECOVERY"){
     session=sess; userId=sess&&sess.user?sess.user.id:null; userEmail=sess&&sess.user?sess.user.email:null;
     authState="recovery"; renderRoot(); return;
@@ -1647,6 +1650,7 @@ async function boot(){
   // Theme der Auth-Screens nach Systemeinstellung
   try{ document.documentElement.dataset.theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"; }catch(_){}
   if(!configured()){ authState="setup"; renderRoot(); return; }
+  console.log("[LernPilot] boot: createClient", new Date().toISOString());
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   authState="loading"; renderRoot();
   // Harter Notausgang: egal wo es hängt, nach 2s nie für immer im Spinner bleiben.
@@ -1659,11 +1663,14 @@ async function boot(){
   // Mit Timeout: ein hängender/ungültiger Refresh-Token (Browser-Lock) darf den
   // Spinner nicht für immer blockieren -> dann lokale Auth-Daten zurücksetzen.
   try{
+    console.log("[LernPilot] boot: getSession start", new Date().toISOString());
     const data = await withTimeout(supabase.auth.getSession(), 6000);
+    console.log("[LernPilot] boot: getSession done", new Date().toISOString());
     if(authState==="loading"){
       await onAuth(data && data.data && data.data.session ? "SIGNED_IN" : "SIGNED_OUT", data && data.data && data.data.session);
     }
   }catch(err){
+    console.log("[LernPilot] boot: getSession FAILED/TIMEOUT", err, new Date().toISOString());
     if(authState==="loading"){
       try{ await supabase.auth.signOut({ scope:"local" }); }catch(_){}
       authState="auth"; renderRoot();
