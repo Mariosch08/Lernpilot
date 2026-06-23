@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#2563eb">
 <title>LernPilot – Dein intelligenter Lernplaner</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%231e2451'/%3E%3Ccircle cx='20' cy='20' r='18' fill='none' stroke='%23f5b21a' stroke-width='2.5'/%3E%3Cpath d='M27 13L17 17.5L13 27L23 22.5L27 13Z' fill='%23f5b21a'/%3E%3Ccircle cx='20' cy='20' r='1.8' fill='%231e2451'/%3E%3C/svg%3E">
+<!-- PWA / „Zum Home-Bildschirm hinzufügen" -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LernPilot">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
   :root{
     --bg:#e9ebe5;
@@ -295,6 +302,21 @@
     transition:.3s ease;z-index:99;max-width:90vw;text-align:center;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------- Install / Add to Home Screen ---------- */
+  .install-btn{flex:1 0 100%;background:var(--primary-weak);border-color:var(--primary);color:var(--primary);font-weight:600}
+  .install-btn:hover{background:var(--primary-weak);border-color:var(--primary);filter:brightness(.98)}
+
+  .pwa-modal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45)}
+  .pwa-modal.show{display:flex}
+  .pwa-card{width:100%;max-width:360px;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);padding:24px}
+  .pwa-card h3{font-size:1.12rem;font-weight:800;margin-bottom:6px;letter-spacing:-.01em}
+  .pwa-card > p{font-size:.9rem;color:var(--muted);margin-bottom:16px}
+  .pwa-steps{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:18px}
+  .pwa-steps li{display:flex;gap:11px;align-items:flex-start;font-size:.92rem}
+  .pwa-steps .n{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:var(--primary-weak);color:var(--primary);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .pwa-steps .ios-share{display:inline-flex;vertical-align:-4px;color:var(--primary)}
+  .pwa-close{width:100%;padding:11px;border:none;border-radius:var(--radius-sm);background:var(--primary);color:var(--primary-ink);font-weight:600;font-size:.92rem}
 
   .scrim{display:none}
 
@@ -1336,6 +1358,7 @@ function appShell(){
           '<button class="ux-logout" data-action="logout">Abmelden</button></div>'+
       '</div>'+
       '<div class="sidebar-foot">'+
+        '<button class="tool-btn install-btn" data-action="install-app" title="LernPilot als App installieren" style="display:none">⬇️ App installieren</button>'+
         '<button class="tool-btn" data-action="toggle-theme" title="Dark Mode umschalten"><span class="ico" id="theme-ico"></span><span id="theme-txt">Dunkel</span></button>'+
         '<button class="tool-btn" data-action="export-ical" title="In Kalender exportieren">📅 iCal</button>'+
         '<button class="tool-btn" data-action="export-pdf" title="Als PDF exportieren">📄 PDF</button>'+
@@ -1349,6 +1372,7 @@ function appShell(){
         '</button>'+
         '<span class="tb-brand">LernPilot</span>'+
         '<div class="tb-actions">'+
+          '<button data-action="install-app" aria-label="App installieren" title="LernPilot als App installieren" style="display:none">⬇️</button>'+
           '<button data-action="toggle-theme" aria-label="Dark Mode">🌙</button>'+
           '<button data-action="export-ical" aria-label="iCal Export">📅</button>'+
           '<button data-action="export-pdf" aria-label="PDF Export">📄</button>'+
@@ -1435,6 +1459,7 @@ function render(){
   const tt = byId("theme-txt"); if(tt) tt.textContent = state.settings.darkMode ? "Hell" : "Dunkel";
   renderNav();
   const c = byId("content"); if(c) c.innerHTML = VIEWS[view]();
+  refreshInstallUI();
   window.scrollTo(0,0);
 }
 
@@ -1497,6 +1522,8 @@ document.addEventListener("click", async (e)=>{
   if(a==="toggle-theme"){ setDarkModeRemote(!state.settings.darkMode); return; }
   if(a==="export-ical"){ exportICal(); return; }
   if(a==="export-pdf"){ toast("Druckdialog – als PDF speichern"); setTimeout(()=>window.print(),250); return; }
+  if(a==="install-app"){ await promptInstall(); return; }
+  if(a==="pwa-close"){ const m=byId("pwa-ios"); if(m) m.classList.remove("show"); return; }
 
   if(a==="toggle-block"){ toggleBlockRemote(el.dataset.id); return; }
 
@@ -1761,12 +1788,18 @@ async function boot(){
   try{ document.documentElement.dataset.theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"; }catch(_){}
   if(!configured()){ authState="setup"; renderRoot(); return; }
   console.log("[LernPilot] boot: createClient", new Date().toISOString());
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,   // Login-/Recovery-Links aus der URL lesen
+      // Eigene Sperre statt der Standard-Web-Lock: wartet nie für immer.
+      // Das war die Ursache des "ewigen Lade-Spinners" – getSession bzw. der
+      // Token-Refresh blieb auf navigator.locks hängen (anderer Tab / Browser-Bug).
+      lock: navigatorLock
+    }
+  });
   authState="loading"; renderRoot();
-  // Harter Notausgang: egal wo es hängt, nach 2s nie für immer im Spinner bleiben.
-  setTimeout(()=>{
-    if(authState==="loading"){ dbErrorMsg="Zeitüberschreitung beim Laden."; authState="dberror"; renderRoot(); }
-  }, 2000);
   supabase.auth.onAuthStateChange((event, sess)=> onAuth(event, sess));
   // Falls onAuthStateChange (z.B. ohne aktive Session) nicht rechtzeitig feuert,
   // bleibt sonst der Lade-Spinner für immer stehen -> Session direkt nachfragen.
@@ -1792,6 +1825,110 @@ function withTimeout(promise, ms){
     promise,
     new Promise((_,rej)=> setTimeout(()=> rej(new Error("timeout")), ms))
   ]);
+}
+
+// Web-Lock für Supabase-Auth: nutzt navigator.locks, bricht das Warten aber
+// nach kurzer Zeit ab, statt ewig zu blockieren. Wird die Sperre nicht
+// rechtzeitig frei (anderer Tab / hängender Refresh), schlägt der Aufruf
+// kontrolliert fehl – der Boot-Code behandelt das (Logout-fallback / dberror),
+// sodass nie ein unendlicher Lade-Spinner entsteht.
+async function navigatorLock(name, acquireTimeout, fn){
+  if(typeof navigator === "undefined" || !navigator.locks) return await fn();
+  const ctrl = new AbortController();
+  const cap = acquireTimeout > 0 ? acquireTimeout : 5000;
+  const timer = setTimeout(()=> ctrl.abort(), cap);
+  try{
+    return await navigator.locks.request(name, { mode:"exclusive", signal: ctrl.signal }, async ()=>{
+      clearTimeout(timer);          // Sperre erhalten -> Notbremse aus
+      return await fn();
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* =========================================================
+   PWA – „Zum Home-Bildschirm hinzufügen"
+   • Android/Chrome/Edge: eigener Installations-Button via beforeinstallprompt
+   • iOS/iPadOS Safari: kein Auto-Prompt -> Anleitung (Teilen -> Home-Bildschirm)
+   • Bereits installiert (Standalone): Button wird ausgeblendet
+   ========================================================= */
+let deferredInstallPrompt = null;
+
+const IOS_SHARE = '<svg class="ios-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg>';
+
+function isStandalone(){
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+         window.navigator.standalone === true;
+}
+function isIOS(){
+  const ua = navigator.userAgent || "";
+  return /iphone|ipad|ipod/i.test(ua) ||
+    // iPadOS meldet sich als „MacIntel" mit Touch
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+function showInstallButtons(show){
+  document.querySelectorAll('[data-action="install-app"]').forEach(b=>{ b.style.display = show ? "" : "none"; });
+}
+function refreshInstallUI(){
+  if(isStandalone()){ showInstallButtons(false); return; }
+  // Android: erst zeigen, wenn das System die Installation anbietet.
+  // iOS: immer zeigen (führt zur manuellen Anleitung).
+  showInstallButtons(!!deferredInstallPrompt || isIOS());
+}
+async function promptInstall(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    let outcome = "dismissed";
+    try{ ({ outcome } = await deferredInstallPrompt.userChoice); }catch(_){}
+    deferredInstallPrompt = null;
+    if(outcome === "accepted"){ showInstallButtons(false); }
+    else { refreshInstallUI(); }
+    return;
+  }
+  if(isIOS()){ openIosSheet(); return; }
+  // Andere Browser ohne Auto-Prompt (z. B. Desktop-Firefox)
+  toast('Im Browser-Menü „Zum Startbildschirm hinzufügen" wählen');
+}
+function openIosSheet(){
+  let m = byId("pwa-ios");
+  if(!m){
+    m = document.createElement("div");
+    m.id = "pwa-ios";
+    m.className = "pwa-modal";
+    m.innerHTML =
+      '<div class="pwa-card">'+
+        '<h3>Zum Home-Bildschirm hinzufügen</h3>'+
+        '<p>So installierst du LernPilot wie eine App auf deinem iPhone oder iPad:</p>'+
+        '<ul class="pwa-steps">'+
+          '<li><span class="n">1</span><span>Tippe unten in Safari auf das Teilen-Symbol '+IOS_SHARE+'.</span></li>'+
+          '<li><span class="n">2</span><span>Scrolle nach unten und wähle <b>„Zum Home-Bildschirm"</b>.</span></li>'+
+          '<li><span class="n">3</span><span>Tippe oben rechts auf <b>„Hinzufügen"</b> – fertig!</span></li>'+
+        '</ul>'+
+        '<button class="pwa-close" data-action="pwa-close">Verstanden</button>'+
+      '</div>';
+    m.addEventListener("click", (e)=>{ if(e.target === m) m.classList.remove("show"); });
+    document.body.appendChild(m);
+  }
+  m.classList.add("show");
+}
+
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  refreshInstallUI();
+});
+window.addEventListener("appinstalled", ()=>{
+  deferredInstallPrompt = null;
+  showInstallButtons(false);
+  toast("LernPilot wurde installiert 🎉");
+});
+
+// Service Worker registrieren (Voraussetzung für die Installation in Chrome/Edge)
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{ /* offline/lokal egal */ });
+  });
 }
 
 boot();
